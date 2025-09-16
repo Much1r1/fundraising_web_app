@@ -42,9 +42,11 @@ export const Header = () => {
             </Button>
           </Link>
 
-          <Button variant="ghost" size="sm">
-            <User className="h-4 w-4" />
-          </Button>
+          <Link to="/auth">
+            <Button variant="ghost" size="sm">
+              <User className="h-4 w-4" />
+            </Button>
+          </Link>
 
           {/* Mobile Menu Button */}
           <Button
