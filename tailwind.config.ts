@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -47,6 +48,29 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Fundraising specific colors
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        donation: {
+          DEFAULT: "hsl(var(--donation))",
+          foreground: "hsl(var(--donation-foreground))",
+        },
+        // Gamification colors
+        streak: {
+          DEFAULT: "hsl(var(--streak))",
+          foreground: "hsl(var(--streak-foreground))",
+        },
+        badge: {
+          gold: "hsl(var(--badge-gold))",
+          silver: "hsl(var(--badge-silver))",
+          bronze: "hsl(var(--badge-bronze))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -62,6 +86,21 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      // Custom gradients and backgrounds
+      backgroundImage: {
+        'gradient-primary': 'var(--gradient-primary)',
+        'gradient-success': 'var(--gradient-success)',
+        'gradient-donation': 'var(--gradient-donation)',
+        'gradient-hero': 'var(--gradient-hero)',
+        'gradient-card': 'var(--gradient-card)',
+      },
+      // Custom shadows
+      boxShadow: {
+        'soft': 'var(--shadow-soft)',
+        'medium': 'var(--shadow-medium)',
+        'large': 'var(--shadow-large)',
+        'glow': 'var(--shadow-glow)',
       },
       keyframes: {
         "accordion-down": {
