@@ -10,6 +10,7 @@ import Campaigns from "./pages/Campaigns";
 import CreateCampaign from "./pages/CreateCampaign";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Donate from "./pages/Donate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/campaigns" element={<Campaigns />} />
+              <Route path="/campaigns/:id" element={<div>Campaign Detail</div>} />
+              <Route path="/donate/:id" element={<Donate />} />
               <Route path="/create-campaign" element={<CreateCampaign />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />

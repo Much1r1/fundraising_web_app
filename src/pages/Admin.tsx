@@ -16,7 +16,9 @@ import {
   Line, 
   PieChart, 
   Pie, 
-  Cell 
+  Cell,
+  AreaChart,
+  Area
 } from "recharts";
 import { 
   Users, 
@@ -29,19 +31,33 @@ import {
   Download,
   Flag,
   Shield,
-  Activity
+  Activity,
+  Target,
+  Globe,
+  Zap
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AnalyticsCard } from "@/components/admin/AnalyticsCard";
+import { CampaignModerationTable } from "@/components/admin/CampaignModerationTable";
+import { FraudDetectionPanel } from "@/components/admin/FraudDetectionPanel";
 
-// Mock data for demonstration
+// Enhanced analytics data
 const analyticsData = [
-  { name: "Jan", donations: 12400, campaigns: 240, users: 400 },
-  { name: "Feb", donations: 13000, campaigns: 300, users: 500 },
-  { name: "Mar", donations: 15600, campaigns: 200, users: 600 },
-  { name: "Apr", donations: 18200, campaigns: 278, users: 700 },
-  { name: "May", donations: 19000, campaigns: 189, users: 800 },
-  { name: "Jun", donations: 21000, campaigns: 239, users: 900 },
+  { name: "Jan", donations: 124000, campaigns: 24, users: 400, conversion: 3.2 },
+  { name: "Feb", donations: 156000, campaigns: 32, users: 520, conversion: 3.8 },
+  { name: "Mar", donations: 189000, campaigns: 28, users: 650, conversion: 4.1 },
+  { name: "Apr", donations: 234000, campaigns: 35, users: 780, conversion: 4.7 },
+  { name: "May", donations: 298000, campaigns: 42, users: 890, conversion: 5.2 },
+  { name: "Jun", donations: 365000, campaigns: 38, users: 1020, conversion: 5.8 },
+];
+
+const hourlyData = [
+  { hour: "00", donations: 45, campaigns: 2 },
+  { hour: "06", donations: 120, campaigns: 5 },
+  { hour: "12", donations: 340, campaigns: 12 },
+  { hour: "18", donations: 280, campaigns: 8 },
+  { hour: "24", donations: 95, campaigns: 3 },
 ];
 
 const campaignsByCategory = [
@@ -84,10 +100,13 @@ const recentCampaigns = [
 
 export default function Admin() {
   const [stats, setStats] = useState({
-    totalUsers: 12547,
-    totalCampaigns: 1834,
-    totalDonations: 2847592,
-    pendingApprovals: 23
+    totalUsers: 25847,
+    totalCampaigns: 3247,
+    totalDonations: 8947592,
+    pendingApprovals: 18,
+    activeUsers: 12430,
+    conversionRate: 5.8,
+    avgDonation: 2850
   });
   const { toast } = useToast();
 
@@ -131,86 +150,119 @@ export default function Admin() {
         </Button>
       </div>
 
-      {/* Stats Grid */}
+      {/* Enhanced Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-success">+12.5%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
+        <AnalyticsCard
+          title="Total Users"
+          value={stats.totalUsers.toLocaleString()}
+          trend={{ value: 12.5, label: "from last month" }}
+          icon={<Users className="h-4 w-4" />}
+        />
+        
+        <AnalyticsCard
+          title="Active Campaigns"
+          value={stats.totalCampaigns.toLocaleString()}
+          trend={{ value: 8.2, label: "from last month" }}
+          icon={<Target className="h-4 w-4" />}
+        />
+        
+        <AnalyticsCard
+          title="Total Donations"
+          value={`KES ${stats.totalDonations.toLocaleString()}`}
+          trend={{ value: 15.3, label: "from last month" }}
+          icon={<DollarSign className="h-4 w-4" />}
+        />
+        
+        <AnalyticsCard
+          title="Pending Approvals"
+          value={stats.pendingApprovals}
+          description="Requires immediate attention"
+          icon={<AlertTriangle className="h-4 w-4 text-warning" />}
+          className="border-warning/20"
+        />
+      </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCampaigns.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-success">+8.2%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">KES {stats.totalDonations.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-success">+15.3%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.pendingApprovals}</div>
-            <p className="text-xs text-muted-foreground">
-              Requires immediate attention
-            </p>
-          </CardContent>
-        </Card>
+      {/* Additional KPI Row */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <AnalyticsCard
+          title="Active Users (24h)"
+          value={stats.activeUsers.toLocaleString()}
+          trend={{ value: 5.2, label: "vs yesterday" }}
+          icon={<Activity className="h-4 w-4" />}
+        />
+        
+        <AnalyticsCard
+          title="Conversion Rate"
+          value={`${stats.conversionRate}%`}
+          trend={{ value: 2.1, label: "improvement" }}
+          icon={<TrendingUp className="h-4 w-4" />}
+        />
+        
+        <AnalyticsCard
+          title="Avg Donation"
+          value={`KES ${stats.avgDonation.toLocaleString()}`}
+          trend={{ value: -3.2, label: "from last week" }}
+          icon={<Globe className="h-4 w-4" />}
+        />
+        
+        <AnalyticsCard
+          title="Platform Health"
+          value="99.9%"
+          description="System uptime"
+          icon={<Zap className="h-4 w-4 text-success" />}
+        />
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="fraud">Fraud Detection</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Monthly Trends</CardTitle>
-                <CardDescription>Donations, campaigns, and user growth over time</CardDescription>
+                <CardTitle>Revenue & Growth Trends</CardTitle>
+                <CardDescription>Monthly donations, campaigns, and user acquisition</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={analyticsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="donations" stroke="#3b82f6" strokeWidth={2} />
-                    <Line type="monotone" dataKey="campaigns" stroke="#10b981" strokeWidth={2} />
-                  </LineChart>
+                <ResponsiveContainer width="100%" height={350}>
+                  <AreaChart data={analyticsData}>
+                    <defs>
+                      <linearGradient id="donationsGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-muted-foreground" />
+                    <YAxis className="text-muted-foreground" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="donations" 
+                      stroke="hsl(var(--primary))" 
+                      fillOpacity={1} 
+                      fill="url(#donationsGradient)"
+                      strokeWidth={2}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="campaigns" 
+                      stroke="hsl(var(--secondary))" 
+                      strokeWidth={2} 
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -218,17 +270,17 @@ export default function Admin() {
             <Card>
               <CardHeader>
                 <CardTitle>Campaigns by Category</CardTitle>
-                <CardDescription>Distribution of campaigns across different categories</CardDescription>
+                <CardDescription>Distribution across categories</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <PieChart>
                     <Pie
                       data={campaignsByCategory}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius={80}
+                      outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -243,65 +295,30 @@ export default function Admin() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Hourly Activity Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>24-Hour Activity Pattern</CardTitle>
+              <CardDescription>Donation and campaign creation patterns throughout the day</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={hourlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="donations" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="campaigns" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="campaigns" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Management</CardTitle>
-              <CardDescription>Review and moderate campaigns awaiting approval</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentCampaigns.map((campaign) => (
-                  <div key={campaign.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-medium">{campaign.title}</h3>
-                        {campaign.flagged && <Flag className="h-4 w-4 text-destructive" />}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-1">By {campaign.creator}</p>
-                      <p className="text-sm">
-                        KES {campaign.raised.toLocaleString()} raised of KES {campaign.goal.toLocaleString()} goal
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant={campaign.status === "approved" ? "default" : "secondary"}
-                        className={campaign.status === "approved" ? "bg-success" : ""}
-                      >
-                        {campaign.status}
-                      </Badge>
-                      {campaign.status === "pending" && (
-                        <>
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleApproveCampaign(campaign.id)}
-                            className="bg-success hover:bg-success/90"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive" 
-                            onClick={() => handleRejectCampaign(campaign.id)}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </>
-                      )}
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <CampaignModerationTable />
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
@@ -321,19 +338,50 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="fraud" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Fraud Detection</CardTitle>
-              <CardDescription>Monitor suspicious activities and prevent fraudulent campaigns</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Fraud detection dashboard would go here</p>
-                <p className="text-sm mt-2">Features: AI-powered detection, manual reviews, blacklists</p>
-              </div>
-            </CardContent>
-          </Card>
+          <FraudDetectionPanel />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Export Reports</CardTitle>
+                <CardDescription>Generate and download various reports</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button onClick={exportData} className="w-full justify-start">
+                  <Download className="mr-2 h-4 w-4" />
+                  Campaign Performance Report
+                </Button>
+                <Button onClick={exportData} variant="outline" className="w-full justify-start">
+                  <Download className="mr-2 h-4 w-4" />
+                  Donation Summary (Monthly)
+                </Button>
+                <Button onClick={exportData} variant="outline" className="w-full justify-start">
+                  <Download className="mr-2 h-4 w-4" />
+                  User Analytics Report
+                </Button>
+                <Button onClick={exportData} variant="outline" className="w-full justify-start">
+                  <Download className="mr-2 h-4 w-4" />
+                  Fraud Detection Log
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Scheduled Reports</CardTitle>
+                <CardDescription>Automated report delivery settings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Scheduled reporting configuration</p>
+                  <p className="text-sm mt-2">Weekly, monthly, and quarterly automated reports</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
