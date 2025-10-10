@@ -1,12 +1,82 @@
 import { useState } from "react";
-import { Search, Filter, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Filter, TrendingUp, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import CampaignCard from "@/components/CampaignCard";
+import { useToast } from "@/hooks/use-toast";
 
 const Campaigns = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("relevant");
+  const { toast } = useToast();
+
+  // Fetch campaigns from Supabase
+  const { data: campaigns, isLoading, error } = useQuery({
+    queryKey: ["campaigns", category, searchQuery, sortBy],
+    queryFn: async () => {
+      let query = supabase
+        .from("campaigns")
+        .select("*")
+        .eq("visibility", "public")
+        .in("campaign_status", ["active", "completed"]);
+
+      // Filter by category
+      if (category !== "all") {
+        query = query.eq("category", category);
+      }
+
+      // Search filter
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      // Sorting
+      switch (sortBy) {
+        case "recent":
+          query = query.order("created_at", { ascending: false });
+          break;
+        case "popular":
+          query = query.order("current_amount", { ascending: false });
+          break;
+        case "ending":
+          query = query.order("end_date", { ascending: true });
+          break;
+        default:
+          query = query.order("created_at", { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching campaigns:", error);
+        throw error;
+      }
+
+      return data;
+    },
+  });
+
+  // Show error toast if fetch fails
+  if (error) {
+    toast({
+      title: "Error loading campaigns",
+      description: "Please try again later",
+      variant: "destructive",
+    });
+  }
+
+  // Calculate days left for a campaign
+  const getDaysLeft = (endDate: string | null) => {
+    if (!endDate) return undefined;
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  };
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -70,12 +140,12 @@ const Campaigns = () => {
         </div>
 
         {/* Results */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="flex items-center justify-between mb-6">
             <p className="text-muted-foreground">
-              Showing campaigns
+              {campaigns ? `Showing ${campaigns.length} campaigns` : 'Loading...'}
             </p>
-            <Select defaultValue="relevant">
+            <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -88,17 +158,40 @@ const Campaigns = () => {
             </Select>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Campaign cards will be loaded here */}
+          {isLoading ? (
+            <div className="col-span-full text-center py-16">
+              <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+              <p className="text-muted-foreground text-lg">Loading campaigns...</p>
+            </div>
+          ) : campaigns && campaigns.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {campaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  id={campaign.id}
+                  title={campaign.title}
+                  description={campaign.description}
+                  imageUrl={campaign.image_url || undefined}
+                  goalAmount={Number(campaign.goal_amount)}
+                  currentAmount={Number(campaign.current_amount)}
+                  category={campaign.category}
+                  location={campaign.location || undefined}
+                  daysLeft={getDaysLeft(campaign.end_date)}
+                  isVerified={campaign.verification_status === "verified"}
+                  isTrending={Number(campaign.current_amount) > Number(campaign.goal_amount) * 0.5}
+                />
+              ))}
+            </div>
+          ) : (
             <div className="col-span-full text-center py-16">
               <p className="text-muted-foreground text-lg mb-4">
-                Loading campaigns from your database...
+                No campaigns found
               </p>
               <p className="text-sm text-muted-foreground">
-                Campaign cards will display data from Supabase
+                Try adjusting your filters or search query
               </p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
