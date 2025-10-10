@@ -1,8 +1,38 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Heart, TrendingUp, Users, Award } from "lucide-react";
+import { Heart, TrendingUp, Users, Award, Loader2 } from "lucide-react";
+import CampaignCard from "@/components/CampaignCard";
 
 const Home = () => {
+  // Fetch featured campaigns
+  const { data: campaigns, isLoading } = useQuery({
+    queryKey: ["featured-campaigns"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("*")
+        .order("current_amount", { ascending: false })
+        .limit(6);
+
+      if (error) {
+        console.error("Error fetching campaigns:", error);
+        throw error;
+      }
+
+      return data;
+    },
+  });
+
+  const getDaysLeft = (endDate: string | null) => {
+    if (!endDate) return undefined;
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -59,10 +89,33 @@ const Home = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Campaign cards will be loaded here */}
-            <div className="text-center py-12 col-span-full">
-              <p className="text-muted-foreground">Loading campaigns...</p>
-            </div>
+            {isLoading ? (
+              <div className="col-span-full text-center py-12">
+                <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading campaigns...</p>
+              </div>
+            ) : campaigns && campaigns.length > 0 ? (
+              campaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  id={campaign.id}
+                  title={campaign.title}
+                  description={campaign.description}
+                  imageUrl={campaign.image_url || undefined}
+                  goalAmount={Number(campaign.goal_amount)}
+                  currentAmount={Number(campaign.current_amount)}
+                  category={campaign.category}
+                  location={campaign.location || undefined}
+                  daysLeft={getDaysLeft(campaign.end_date)}
+                  isVerified={campaign.verification_status === "verified"}
+                  isTrending={Number(campaign.current_amount) > Number(campaign.goal_amount) * 0.5}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No campaigns available yet</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

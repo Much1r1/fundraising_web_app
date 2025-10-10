@@ -20,9 +20,7 @@ const Campaigns = () => {
     queryFn: async () => {
       let query = supabase
         .from("campaigns")
-        .select("*")
-        .eq("visibility", "public")
-        .in("campaign_status", ["active", "completed"]);
+        .select("*");
 
       // Filter by category
       if (category !== "all") {
@@ -49,7 +47,7 @@ const Campaigns = () => {
           query = query.order("created_at", { ascending: false });
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.limit(50);
 
       if (error) {
         console.error("Error fetching campaigns:", error);
