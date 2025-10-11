@@ -107,7 +107,7 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total Donated</span>
-                  <span className="font-bold text-xl">$1,250</span>
+                  <span className="font-bold text-xl">KSh 125,000</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Campaigns Supported</span>
@@ -155,7 +155,7 @@ const Profile = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-primary">${donation.amount}</p>
+                          <p className="text-xl font-bold text-primary">KSh {donation.amount * 100}</p>
                           <Badge variant="outline" className="mt-1">
                             {donation.status}
                           </Badge>
@@ -182,7 +182,7 @@ const Profile = () => {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Progress</span>
                         <span className="font-semibold">
-                          ${campaign.raised} / ${campaign.goal}
+                          KSh {campaign.raised * 100} / KSh {campaign.goal * 100}
                         </span>
                       </div>
                     </CardContent>

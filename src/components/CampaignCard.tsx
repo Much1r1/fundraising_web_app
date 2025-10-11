@@ -109,10 +109,10 @@ const CampaignCard = ({
           <div className="flex items-center justify-between text-sm">
             <div>
               <p className="font-bold text-lg text-foreground">
-                ${currentAmount.toLocaleString()}
+                KSh {currentAmount.toLocaleString()}
               </p>
               <p className="text-xs text-muted-foreground">
-                raised of ${goalAmount.toLocaleString()}
+                raised of KSh {goalAmount.toLocaleString()}
               </p>
             </div>
             {daysLeft !== undefined && (

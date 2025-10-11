@@ -88,7 +88,7 @@ const CampaignDetail = () => {
     }
     toast({
       title: "Processing donation",
-      description: `Processing donation of $${donationAmount}`,
+      description: `Processing donation of KSh ${donationAmount}`,
     });
   };
 
@@ -224,10 +224,10 @@ const CampaignDetail = () => {
                   
                   <div>
                     <p className="text-3xl font-bold text-foreground">
-                      ${Number(campaign.current_amount).toLocaleString()}
+                      KSh {Number(campaign.current_amount).toLocaleString()}
                     </p>
                     <p className="text-muted-foreground">
-                      raised of ${Number(campaign.goal_amount).toLocaleString()} goal
+                      raised of KSh {Number(campaign.goal_amount).toLocaleString()} goal
                     </p>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ const CampaignDetail = () => {
                   <label className="text-sm font-medium">Enter your donation</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      $
+                      KSh
                     </span>
                     <Input
                       type="number"
@@ -259,7 +259,7 @@ const CampaignDetail = () => {
                         size="sm"
                         onClick={() => setDonationAmount(amount.toString())}
                       >
-                        ${amount}
+                        KSh {amount}
                       </Button>
                     ))}
                   </div>

@@ -60,7 +60,7 @@ const Home = () => {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 animate-slide-up">
             {[
-              { icon: Heart, label: "Total Raised", value: "$2.5M+" },
+              { icon: Heart, label: "Total Raised", value: "KSh 250M+" },
               { icon: Users, label: "Active Donors", value: "15K+" },
               { icon: TrendingUp, label: "Success Rate", value: "92%" },
               { icon: Award, label: "Campaigns Funded", value: "3.2K+" },
