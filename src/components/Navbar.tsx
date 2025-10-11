@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Heart, Menu, Search, User, Bell } from "lucide-react";
 import { useState } from "react";
 
@@ -42,6 +43,8 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <Bell className="w-5 h-5" />
             </Button>
+
+            <ThemeToggle />
 
             <Link to="/auth" className="hidden md:block">
               <Button variant="outline" size="sm">
