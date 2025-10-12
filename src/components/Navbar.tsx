@@ -53,7 +53,7 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            <Link to="/create-campaign">
+            <Link to="/campaigns/create">
               <Button size="sm" variant="accent" className="hidden md:flex">
                 Start Campaign
               </Button>
@@ -88,7 +88,7 @@ const Navbar = () => {
                   Sign In
                 </Button>
               </Link>
-              <Link to="/create-campaign">
+              <Link to="/campaigns/create">
                 <Button className="w-full" variant="accent">
                   Start Campaign
                 </Button>
