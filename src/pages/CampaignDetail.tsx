@@ -28,6 +28,9 @@ const CampaignDetail = () => {
   const { toast } = useToast();
   const [donationAmount, setDonationAmount] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "stripe">("mpesa");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", id],
@@ -77,19 +80,68 @@ const CampaignDetail = () => {
     });
   };
 
-  const handleDonate = () => {
-    if (!donationAmount || Number(donationAmount) <= 0) {
+  const handleDonate = async () => {
+    if (!donationAmount || parseFloat(donationAmount) <= 0) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid donation amount",
+        title: "Invalid Amount",
+        description: "Please enter a valid donation amount.",
         variant: "destructive",
       });
       return;
     }
-    toast({
-      title: "Processing donation",
-      description: `Processing donation of KSh ${donationAmount}`,
-    });
+
+    if (paymentMethod === "mpesa") {
+      if (!phoneNumber || !/^254\d{9}$/.test(phoneNumber)) {
+        toast({
+          title: "Invalid Phone Number",
+          description: "Please enter a valid phone number (format: 254XXXXXXXXX)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsProcessing(true);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('mpesa-payment', {
+          body: {
+            action: 'initiate',
+            phoneNumber,
+            amount: parseFloat(donationAmount),
+            campaignId: id,
+            donorId: null,
+            accountReference: campaign?.title.substring(0, 12),
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+          toast({
+            title: "STK Push Sent",
+            description: data.message,
+          });
+          setDonationAmount("");
+          setPhoneNumber("");
+        } else {
+          throw new Error(data.error || 'Payment initiation failed');
+        }
+      } catch (error: any) {
+        console.error('M-Pesa payment error:', error);
+        toast({
+          title: "Payment Failed",
+          description: error.message || "Failed to initiate M-Pesa payment. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    } else {
+      toast({
+        title: "Coming Soon",
+        description: "Stripe payment integration coming soon!",
+      });
+    }
   };
 
   return (
@@ -234,6 +286,46 @@ const CampaignDetail = () => {
 
                 <Separator />
 
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Payment Method</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={paymentMethod === "mpesa" ? "default" : "outline"}
+                      onClick={() => setPaymentMethod("mpesa")}
+                      size="sm"
+                    >
+                      M-Pesa
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={paymentMethod === "stripe" ? "default" : "outline"}
+                      onClick={() => setPaymentMethod("stripe")}
+                      size="sm"
+                    >
+                      Card/PayPal
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Phone Number for M-Pesa */}
+                {paymentMethod === "mpesa" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Phone Number</label>
+                    <Input
+                      type="tel"
+                      placeholder="254XXXXXXXXX"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="text-lg"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your M-Pesa number
+                    </p>
+                  </div>
+                )}
+
                 {/* Donation Amount */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Enter your donation</label>
@@ -252,22 +344,28 @@ const CampaignDetail = () => {
 
                   {/* Quick amounts */}
                   <div className="grid grid-cols-3 gap-2">
-                    {[10, 25, 50].map((amount) => (
+                    {[100, 500, 1000].map((amount) => (
                       <Button
                         key={amount}
                         variant="outline"
                         size="sm"
                         onClick={() => setDonationAmount(amount.toString())}
                       >
-                        KSh {amount}
+                        {amount}
                       </Button>
                     ))}
                   </div>
                 </div>
 
                 {/* Donate Button */}
-                <Button className="w-full" size="lg" variant="hero" onClick={handleDonate}>
-                  Donate Now
+                <Button 
+                  className="w-full" 
+                  size="lg" 
+                  variant="hero" 
+                  onClick={handleDonate}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Processing..." : "Donate Now"}
                 </Button>
 
                 {/* Action Buttons */}
