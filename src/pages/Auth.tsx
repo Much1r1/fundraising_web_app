@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("signin");
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
   const [signUpName, setSignUpName] = useState("");
@@ -80,6 +81,11 @@ const Auth = () => {
         title: "Account created!",
         description: "Please check your email to verify your account.",
       });
+      
+      // Redirect to sign-in tab after successful sign-up
+      setTimeout(() => {
+        setActiveTab("signin");
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Error creating account",
@@ -137,7 +143,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
