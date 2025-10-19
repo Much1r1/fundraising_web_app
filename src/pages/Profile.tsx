@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,15 +10,44 @@ import StreakTracker from "@/components/StreakTracker";
 import { Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText } from "lucide-react";
 
 const Profile = () => {
-  // Mock data - will be replaced with real user data
-  const user = {
-    name: "Jane Doe",
-    email: "jane@example.com",
-    location: "Nairobi, Kenya",
-    joinedDate: "January 2024",
-    bio: "Passionate about making a difference in my community. Believer in the power of collective action.",
-    avatarUrl: "",
+  const navigate = useNavigate();
+  type ProfileData = { name: string; email: string; location?: string; joinedDate?: string; bio?: string; avatarUrl?: string };
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+
+  const buildProfile = (u: any): ProfileData => {
+    const meta = (u?.user_metadata as any) || {};
+    const name = meta.full_name || meta.name || (u?.email ? u.email.split("@")[0] : "User");
+    const avatarUrl = meta.avatar_url || meta.picture || "";
+    const joinedDate = u?.created_at ? new Date(u.created_at).toLocaleString("en-US", { month: "long", year: "numeric" }) : undefined;
+    return {
+      name,
+      email: u?.email || "",
+      location: meta.location || "—",
+      joinedDate,
+      bio: meta.bio || "",
+      avatarUrl,
+    };
   };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        navigate("/auth");
+      } else {
+        setProfile(buildProfile(session.user));
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) {
+        navigate("/auth");
+      } else {
+        setProfile(buildProfile(session.user));
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const donations = [
     {
@@ -52,32 +84,32 @@ const Profile = () => {
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
               <Avatar className="w-24 h-24 border-4 border-primary/20">
-                <AvatarImage src={user.avatarUrl} />
+                <AvatarImage src={profile?.avatarUrl} />
                 <AvatarFallback className="text-2xl gradient-primary text-primary-foreground">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {(profile?.name || "U").split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
 
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-center gap-3 mb-3">
-                  <h1 className="text-3xl">{user.name}</h1>
+                  <h1 className="text-3xl">{profile?.name || "—"}</h1>
                   <Badge className="bg-primary w-fit">Verified Donor</Badge>
                 </div>
 
-                <p className="text-muted-foreground mb-4">{user.bio}</p>
+                <p className="text-muted-foreground mb-4">{profile?.bio || ""}</p>
 
                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Mail className="w-4 h-4" />
-                    {user.email}
+                    {profile?.email || "—"}
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {user.location}
+                    {profile?.location || "—"}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    Joined {user.joinedDate}
+                    Joined {profile?.joinedDate || "—"}
                   </span>
                 </div>
               </div>

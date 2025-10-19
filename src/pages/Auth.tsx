@@ -46,7 +46,7 @@ const Auth = () => {
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      navigate("/");
+      navigate("/profile");
     } catch (error: any) {
       toast({
         title: "Error signing in",
@@ -103,7 +103,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}/profile`,
         },
       });
 
