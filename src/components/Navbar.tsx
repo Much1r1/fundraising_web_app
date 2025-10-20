@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -95,9 +96,7 @@ const Navbar = () => {
               <Search className="w-5 h-5" />
             </Button>
             
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Bell className="w-5 h-5" />
-            </Button>
+            <NotificationDropdown />
 
             <ThemeToggle />
 

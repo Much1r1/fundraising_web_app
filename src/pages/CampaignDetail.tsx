@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { CommentSection } from "@/components/CommentSection";
 
 const CampaignDetail = () => {
   const { id } = useParams();
@@ -400,6 +401,11 @@ const CampaignDetail = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <CommentSection campaignId={id!} />
         </div>
       </div>
     </div>
