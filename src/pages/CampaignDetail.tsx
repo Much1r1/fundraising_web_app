@@ -316,7 +316,7 @@ const CampaignDetail = () => {
                     <label className="text-sm font-medium">Phone Number</label>
                     <Input
                       type="tel"
-                      placeholder="+254XXXXXXXXX"
+                      placeholder="254XXXXXXXXX"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       className="text-lg"

@@ -172,7 +172,7 @@ const CreateCampaign = () => {
                       </FormLabel>
                       <FormDescription>
                         Share what inspired you to start this campaign. What's happening, who's involved, and why does it matter?
-                        ✨ Be honest, emotional, and real, that's what connects people.
+                        ✨ Be honest, emotional, and real — that's what connects people.
                       </FormDescription>
                       <FormControl>
                         <Textarea
@@ -251,7 +251,7 @@ const CreateCampaign = () => {
                         4. Would you like to add a video? (Optional)
                       </FormLabel>
                       <FormDescription>
-                        🎥 A short video can help people see and feel your mission. Break down how the funds will be used in the video. Paste a YouTube or Vimeo link.
+                        🎥 A short video can help people see and feel your mission. Paste a YouTube or Vimeo link.
                       </FormDescription>
                       <FormControl>
                         <div className="flex gap-2">
@@ -340,25 +340,15 @@ const CreateCampaign = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="health">Health</SelectItem>
-                        <SelectItem value="education">Education</SelectItem>
-                        <SelectItem value="emergency">Emergency</SelectItem>
-                        <SelectItem value="community">Community</SelectItem>
-                        <SelectItem value="environment">Environment</SelectItem>
-                        <SelectItem value="creative">Creative</SelectItem>
-                        <SelectItem value="animals">Animals</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="charity">Charity</SelectItem>
-                        <SelectItem value="disaster">Disaster</SelectItem>
-                        <SelectItem value="development & infrastructure">Development & Infrastructure</SelectItem>
-                        <SelectItem value="faith">Faith</SelectItem>
-                        <SelectItem value="sports">Sports</SelectItem>
-                        <SelectItem value="welfare">Welfare</SelectItem>
-                        <SelectItem value="memorial">Memorial</SelectItem>
-                        <SelectItem value="agriculture">Agriculture</SelectItem>
-                        <SelectItem value="technology">Technology</SelectItem>
-                        <SelectItem value="justice">Justice</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="education">Education</SelectItem>
+                          <SelectItem value="health">Health & Medical</SelectItem>
+                          <SelectItem value="community">Community Development</SelectItem>
+                          <SelectItem value="environment">Environment</SelectItem>
+                          <SelectItem value="emergency">Emergency Relief</SelectItem>
+                          <SelectItem value="arts">Arts & Culture</SelectItem>
+                          <SelectItem value="sports">Sports</SelectItem>
+                          <SelectItem value="technology">Technology</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -366,46 +356,17 @@ const CreateCampaign = () => {
                   )}
                 />
 
-                {/* Question 8: Fundraiser Recipient */}
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg font-semibold">
-                        8. Who are you fundraising for? *
-                      </FormLabel>
-                      <FormDescription>
-                        Select the recipient of the funds
-                      </FormDescription>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a recipient" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        <SelectItem value="yourself">Yourself: Funds are delivered to your bank account for your own use</SelectItem>
-                        <SelectItem value="someone else">Someone else: You'll invite a beneficiary to receive funds or distribute them yourself</SelectItem>
-                        <SelectItem value="charity">Charity: Funds are delivered to your chosen nonprofit</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Question 9: End Date */}
+                {/* Question 8: End Date */}
                 <FormField
                   control={form.control}
                   name="endDate"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-lg font-semibold">
-                        9. How long should your campaign run? *
+                        8. How long should your campaign run? *
                       </FormLabel>
                       <FormDescription>
-                        Pick an end date, it helps create momentum.
+                        Pick an end date — it helps create momentum.
                       </FormDescription>
                       <FormControl>
                         <div className="flex gap-2">
@@ -422,14 +383,14 @@ const CreateCampaign = () => {
                   )}
                 />
 
-                {/* Question 10: Organizer */}
+                {/* Question 9: Organizer */}
                 <FormField
                   control={form.control}
                   name="organizer"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-lg font-semibold">
-                        10. Who's organizing this campaign? *
+                        9. Who's organizing this campaign? *
                       </FormLabel>
                       <FormDescription>
                         Tell supporters who's behind the effort (you, your team, or an organization)
@@ -445,14 +406,14 @@ const CreateCampaign = () => {
                   )}
                 />
 
-                {/* Question 11: Tagline */}
+                {/* Question 10: Tagline */}
                 <FormField
                   control={form.control}
                   name="tagline"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-lg font-semibold">
-                        11. Add a short tagline or slogan (Optional)
+                        10. Add a short tagline or slogan (Optional)
                       </FormLabel>
                       <FormDescription>
                         Something memorable, like "Hope for Tomorrow" or "Clean Water for Every Child"
@@ -468,21 +429,21 @@ const CreateCampaign = () => {
                   )}
                 />
 
-                {/*Location */}
+                {/* Optional Location */}
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-lg font-semibold">
-                        12. Location *
+                        Location (Optional)
                       </FormLabel>
                       <FormDescription>
                         Where is this campaign located?
                       </FormDescription>
                       <FormControl>
                         <Input
-                          placeholder="e.g., Nairobi"
+                          placeholder="e.g., Nairobi, Kenya"
                           {...field}
                         />
                       </FormControl>

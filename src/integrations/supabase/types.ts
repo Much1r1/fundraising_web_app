@@ -452,6 +452,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_sessions: {
         Row: {
           created_at: string | null
@@ -526,7 +547,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      increment_campaign_amount: {
+        Args: { amount_to_add: number; campaign_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       action_type:
@@ -543,6 +574,7 @@ export type Database = {
         | "cron_job"
         | "payment_gateway_error"
         | "security_alert"
+      app_role: "admin" | "moderator" | "user"
       "audit/admin status": "success" | "failed"
       campaign_status: "draft" | "active" | "paused" | "completed" | "rejected"
       channel_type: "in_app" | "email" | "sms" | "push"
@@ -719,6 +751,7 @@ export const Constants = {
         "payment_gateway_error",
         "security_alert",
       ],
+      app_role: ["admin", "moderator", "user"],
       "audit/admin status": ["success", "failed"],
       campaign_status: ["draft", "active", "paused", "completed", "rejected"],
       channel_type: ["in_app", "email", "sms", "push"],

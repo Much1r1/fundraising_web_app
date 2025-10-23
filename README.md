@@ -1,42 +1,34 @@
-Follow these steps:
+# FUNDRISE
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+**FundRise** is a modern crowdfunding platform built for Kenya and Africa, allowing users to raise funds transparently through **M-Pesa**, **PayPal**, and **card payments**.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+## FEATURES
+
+- Create and manage campaigns  
+- M-Pesa (Daraja API) & PayPal payments  
+- Upload campaign images/videos  
+- Track progress and donations  
+- Supabase authentication  
+- User profiles & dashboards  
+- Fully responsive design  
+
+---
+
+## Tech Stack
+
+**Frontend:** React + TailwindCSS + Vite  
+**Backend:** Supabase (DB + Auth + Storage)  
+**Payments:** M-Pesa Daraja API, PayPal (optional)  
+**Hosting:** Vercel / Netlify  
+**Version Control:** Git & GitHub  
+
+---
+
+## Setup Instructions
+
+### 1️⃣ Clone the Repo
+```bash
+git clone https://github.com/your-username/fundrise.git
+cd fundrise
 npm install
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
