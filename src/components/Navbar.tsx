@@ -17,7 +17,7 @@ const Navbar = () => {
               <Heart className="w-5 h-5 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              FundHope
+              FundRise
             </span>
           </Link>
 
@@ -53,7 +53,7 @@ const Navbar = () => {
               </Button>
             </Link>
 
-            <Link to="/create-campaign">
+            <Link to="/campaigns/create">
               <Button size="sm" variant="accent" className="hidden md:flex">
                 Start Campaign
               </Button>
@@ -88,7 +88,7 @@ const Navbar = () => {
                   Sign In
                 </Button>
               </Link>
-              <Link to="/create-campaign">
+              <Link to="/campaigns/create">
                 <Button className="w-full" variant="accent">
                   Start Campaign
                 </Button>

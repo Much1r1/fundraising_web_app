@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Mail, Lock, User, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";  
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +21,7 @@ const Auth = () => {
               <Heart className="w-6 h-6 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              FundHope
+              FundRise
             </span>
           </Link>
           <p className="text-muted-foreground">
@@ -117,7 +119,7 @@ const Auth = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <Button variant="outline" className="w-full">
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -126,10 +128,6 @@ const Auth = () => {
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Google
-              </Button>
-              <Button variant="outline" className="w-full">
-                <Phone className="w-4 h-4 mr-2" />
-                M-Pesa
               </Button>
             </div>
           </CardContent>
@@ -147,3 +145,4 @@ const Auth = () => {
 };
 
 export default Auth;
+

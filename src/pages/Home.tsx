@@ -45,7 +45,7 @@ const Home = () => {
               Turn Compassion Into Action
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-              Join thousands making a difference. Start a campaign, support a cause, and track your impact with our gamified giving platform.
+              Join thousands making a difference. Start a campaign, support a cause, and track your impact with our crowdfunding platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="accent">
@@ -60,7 +60,7 @@ const Home = () => {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 animate-slide-up">
             {[
-              { icon: Heart, label: "Total Raised", value: "KSh 250M+" },
+              { icon: Heart, label: "Total Raised", value: "KSh 25M+" },
               { icon: Users, label: "Active Donors", value: "15K+" },
               { icon: TrendingUp, label: "Success Rate", value: "92%" },
               { icon: Award, label: "Campaigns Funded", value: "3.2K+" },

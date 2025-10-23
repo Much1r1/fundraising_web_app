@@ -106,11 +106,25 @@ const Campaigns = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="medical">Medical</SelectItem>
+                <SelectItem value="health">Health</SelectItem>
                 <SelectItem value="education">Education</SelectItem>
                 <SelectItem value="emergency">Emergency</SelectItem>
                 <SelectItem value="community">Community</SelectItem>
                 <SelectItem value="environment">Environment</SelectItem>
+                <SelectItem value="creative">Creative</SelectItem>
+                <SelectItem value="animals">Animals</SelectItem>
+                <SelectItem value="business">Business</SelectItem>
+                <SelectItem value="charity">Charity</SelectItem>
+                <SelectItem value="disaster">Disaster</SelectItem>
+                <SelectItem value="development & infrastructure">Development & Infrastructure</SelectItem>
+                <SelectItem value="faith">Faith</SelectItem>
+                <SelectItem value="sports">Sports</SelectItem>
+                <SelectItem value="welfare">Welfare</SelectItem>
+                <SelectItem value="memorial">Memorial</SelectItem>
+                <SelectItem value="agriculture">Agriculture</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="justice">Justice</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
 

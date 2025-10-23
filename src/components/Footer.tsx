@@ -13,7 +13,7 @@ const Footer = () => {
                 <Heart className="w-5 h-5 text-primary-foreground" fill="currentColor" />
               </div>
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                FundHope
+                FundRise
               </span>
             </Link>
             <p className="text-muted-foreground text-sm mb-4">
@@ -67,7 +67,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} FundHope. All rights reserved. Making the world a better place, one donation at a time.</p>
+          <p>© {new Date().getFullYear()} FundHope. All rights reserved. </p>
         </div>
       </div>
     </footer>
