@@ -11,14 +11,28 @@ import { Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText } from "lucid
 
 const Profile = () => {
   const navigate = useNavigate();
-  type ProfileData = { name: string; email: string; location?: string; joinedDate?: string; bio?: string; avatarUrl?: string };
+
+  type ProfileData = {
+    name: string;
+    email: string;
+    location?: string;
+    joinedDate?: string;
+    bio?: string;
+    avatarUrl?: string;
+  };
+
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [donations, setDonations] = useState<any[]>([]);
+  const [myCampaigns, setMyCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const buildProfile = (u: any): ProfileData => {
     const meta = (u?.user_metadata as any) || {};
     const name = meta.full_name || meta.name || (u?.email ? u.email.split("@")[0] : "User");
     const avatarUrl = meta.avatar_url || meta.picture || "";
-    const joinedDate = u?.created_at ? new Date(u.created_at).toLocaleString("en-US", { month: "long", year: "numeric" }) : undefined;
+    const joinedDate = u?.created_at
+      ? new Date(u.created_at).toLocaleString("en-US", { month: "long", year: "numeric" })
+      : undefined;
     return {
       name,
       email: u?.email || "",
@@ -35,6 +49,7 @@ const Profile = () => {
         navigate("/auth");
       } else {
         setProfile(buildProfile(session.user));
+        fetchUserData(session.user.id);
       }
     });
 
@@ -43,38 +58,47 @@ const Profile = () => {
         navigate("/auth");
       } else {
         setProfile(buildProfile(session.user));
+        fetchUserData(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const donations = [
-    {
-      id: "1",
-      campaignTitle: "Help Build Community School",
-      amount: 100,
-      date: "2024-01-15",
-      status: "completed",
-    },
-    {
-      id: "2",
-      campaignTitle: "Medical Emergency Fund",
-      amount: 50,
-      date: "2024-01-10",
-      status: "completed",
-    },
-  ];
+  const fetchUserData = async (userId: string) => {
+    setLoading(true);
 
-  const myCampaigns = [
-    {
-      id: "1",
-      title: "Support Local Artists",
-      status: "active",
-      raised: 2500,
-      goal: 5000,
-    },
-  ];
+    try {
+      // Fetch donations made by the user
+      const { data: donationsData, error: donationsError } = await supabase
+        .from("donations")
+        .select("id, amount, created_at, status, campaigns(title)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (donationsError) console.error("Error fetching donations:", donationsError);
+      else setDonations(donationsData || []);
+
+      // Fetch campaigns created by the user
+      const { data: campaignsData, error: campaignsError } = await supabase
+        .from("campaigns")
+        .select("id, title, status, raised_amount, goal_amount")
+        .eq("creator_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (campaignsError) console.error("Error fetching campaigns:", campaignsError);
+      else setMyCampaigns(campaignsData || []);
+
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+
+    setLoading(false);
+  };
+
+  if (loading && !profile) {
+    return <div className="p-12 text-center text-muted-foreground">Loading profile...</div>;
+  }
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -123,12 +147,12 @@ const Profile = () => {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Stats & Streak */}
+          {/* Left Column */}
           <div className="space-y-6 animate-slide-up">
             <StreakTracker
               currentStreak={7}
               longestStreak={15}
-              totalDonations={24}
+              totalDonations={donations.length}
               badges={["starter", "champion", "hero"]}
             />
 
@@ -139,15 +163,17 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total Donated</span>
-                  <span className="font-bold text-xl">KSh 125,000</span>
+                  <span className="font-bold text-xl">
+                    KSh {donations.reduce((sum, d) => sum + (d.amount || 0), 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Campaigns Supported</span>
-                  <span className="font-bold text-xl">12</span>
+                  <span className="font-bold text-xl">{donations.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Lives Impacted</span>
-                  <span className="font-bold text-xl">150+</span>
+                  <span className="text-muted-foreground">My Campaigns</span>
+                  <span className="font-bold text-xl">{myCampaigns.length}</span>
                 </div>
               </CardContent>
             </Card>
@@ -158,77 +184,73 @@ const Profile = () => {
             <Tabs defaultValue="donations" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="donations" className="gap-2">
-                  <Heart className="w-4 h-4" />
-                  Donations
+                  <Heart className="w-4 h-4" /> Donations
                 </TabsTrigger>
                 <TabsTrigger value="campaigns" className="gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  My Campaigns
+                  <DollarSign className="w-4 h-4" /> My Campaigns
                 </TabsTrigger>
                 <TabsTrigger value="receipts" className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  Receipts
+                  <FileText className="w-4 h-4" /> Receipts
                 </TabsTrigger>
               </TabsList>
 
+              {/* Donations Tab */}
               <TabsContent value="donations" className="mt-6 space-y-4">
-                {donations.map((donation) => (
-                  <Card key={donation.id} className="border hover:border-primary/50 transition-smooth">
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between">
+                {donations.length === 0 ? (
+                  <Card><CardContent className="p-6 text-center text-muted-foreground">No donations yet.</CardContent></Card>
+                ) : (
+                  donations.map((d) => (
+                    <Card key={d.id} className="border hover:border-primary/50 transition-smooth">
+                      <CardContent className="p-5 flex justify-between items-center">
                         <div>
-                          <h3 className="font-semibold mb-1">{donation.campaignTitle}</h3>
+                          <h3 className="font-semibold mb-1">{d.campaigns?.title || "Untitled Campaign"}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(donation.date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
+                            {new Date(d.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-primary">KSh {donation.amount * 100}</p>
-                          <Badge variant="outline" className="mt-1">
-                            {donation.status}
-                          </Badge>
+                          <p className="text-xl font-bold text-primary">KSh {d.amount?.toLocaleString()}</p>
+                          <Badge variant="outline" className="mt-1">{d.status}</Badge>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </TabsContent>
 
+              {/* My Campaigns Tab */}
               <TabsContent value="campaigns" className="mt-6 space-y-4">
-                {myCampaigns.map((campaign) => (
-                  <Card key={campaign.id} className="border hover:border-primary/50 transition-smooth">
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold mb-1">{campaign.title}</h3>
-                          <Badge className="bg-success">{campaign.status}</Badge>
+                {myCampaigns.length === 0 ? (
+                  <Card><CardContent className="p-6 text-center text-muted-foreground">No campaigns yet.</CardContent></Card>
+                ) : (
+                  myCampaigns.map((c) => (
+                    <Card key={c.id} className="border hover:border-primary/50 transition-smooth">
+                      <CardContent className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="font-semibold mb-1">{c.title}</h3>
+                            <Badge className="bg-success">{c.status}</Badge>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/campaign/${c.id}`)}>Manage</Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Manage
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-semibold">
-                          KSh {campaign.raised * 100} / KSh {campaign.goal * 100}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-semibold">
+                            KSh {c.raised_amount?.toLocaleString()} / KSh {c.goal_amount?.toLocaleString()}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </TabsContent>
 
+              {/* Receipts Tab */}
               <TabsContent value="receipts" className="mt-6">
                 <Card className="border-2 border-dashed">
                   <CardContent className="p-12 text-center">
                     <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground mb-4">
-                      Tax receipts will be available here
-                    </p>
+                    <p className="text-muted-foreground mb-4">Tax receipts will be available here</p>
                     <Button variant="outline">Download All Receipts</Button>
                   </CardContent>
                 </Card>
