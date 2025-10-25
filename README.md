@@ -19,8 +19,8 @@
 
 **Frontend:** React + TailwindCSS + Vite  
 **Backend:** Supabase (DB + Auth + Storage)  
-**Payments:** M-Pesa Daraja API, PayPal (optional)  
-**Hosting:** Vercel / Netlify  
+**Payments:** M-Pesa Daraja API, Strpe for Paypal and Card payments  
+**Hosting:** Vercel
 **Version Control:** Git & GitHub  
 
 ---
@@ -29,6 +29,6 @@
 
 ### 1️⃣ Clone the Repo
 ```bash
-git clone https://github.com/your-username/fundrise.git
+git clone https://github.com/Much1r1/fundraising_web_app
 cd fundrise
 npm install
