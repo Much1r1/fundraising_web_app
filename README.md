@@ -1,6 +1,6 @@
 # FUNDRISE
 
-**FundRise** is a modern crowdfunding platform built for Kenya and Africa, allowing users to raise funds transparently through **M-Pesa**, **PayPal**, and **card payments**.
+**FundRise** is a modern crowdfunding platform built for Kenya, allowing users to raise funds transparently through **M-Pesa**, **PayPal**, and **card payments**.
 
 
 ## FEATURES
@@ -11,7 +11,8 @@
 - Track progress and donations  
 - Supabase authentication  
 - User profiles & dashboards  
-- Fully responsive design  
+- Fully responsive design
+- Admin dashobard  
 
 ---
 
