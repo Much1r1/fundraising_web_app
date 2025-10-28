@@ -281,10 +281,7 @@ const Profile = () => {
                     </div>
                   ))
                 )}
-                <Button className="w-full" onClick={() => navigate("/profile/billing")}>
-                 Add New Card
-                </Button>
-
+                <Button className="w-full">Add New Card</Button>
               </CardContent>
             </Card>
           </div>
