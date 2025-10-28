@@ -7,18 +7,42 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StreakTracker from "@/components/StreakTracker";
-import { Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText } from "lucide-react";
+import { Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText, Bell, CreditCard } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "@/components/ui/use-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
-  type ProfileData = { name: string; email: string; location?: string; joinedDate?: string; bio?: string; avatarUrl?: string };
+
+  type ProfileData = {
+    name: string;
+    email: string;
+    location?: string;
+    joinedDate?: string;
+    bio?: string;
+    avatarUrl?: string;
+  };
+
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [donations, setDonations] = useState<any[]>([]);
+  const [myCampaigns, setMyCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Recurring donation preferences
+  const [frequency, setFrequency] = useState<string>("none");
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
+
+  // Card billing management
+  const [cards, setCards] = useState<any[]>([]);
 
   const buildProfile = (u: any): ProfileData => {
     const meta = (u?.user_metadata as any) || {};
     const name = meta.full_name || meta.name || (u?.email ? u.email.split("@")[0] : "User");
     const avatarUrl = meta.avatar_url || meta.picture || "";
-    const joinedDate = u?.created_at ? new Date(u.created_at).toLocaleString("en-US", { month: "long", year: "numeric" }) : undefined;
+    const joinedDate = u?.created_at
+      ? new Date(u.created_at).toLocaleString("en-US", { month: "long", year: "numeric" })
+      : undefined;
     return {
       name,
       email: u?.email || "",
@@ -35,6 +59,7 @@ const Profile = () => {
         navigate("/auth");
       } else {
         setProfile(buildProfile(session.user));
+        fetchUserData(session.user.id);
       }
     });
 
@@ -43,38 +68,87 @@ const Profile = () => {
         navigate("/auth");
       } else {
         setProfile(buildProfile(session.user));
+        fetchUserData(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const donations = [
-    {
-      id: "1",
-      campaignTitle: "Help Build Community School",
-      amount: 100,
-      date: "2024-01-15",
-      status: "completed",
-    },
-    {
-      id: "2",
-      campaignTitle: "Medical Emergency Fund",
-      amount: 50,
-      date: "2024-01-10",
-      status: "completed",
-    },
-  ];
+  const fetchUserData = async (userId: string) => {
+    setLoading(true);
 
-  const myCampaigns = [
-    {
-      id: "1",
-      title: "Support Local Artists",
-      status: "active",
-      raised: 2500,
-      goal: 5000,
-    },
-  ];
+    try {
+      // Fetch donations made by the user
+      const { data: donationsData, error: donationsError } = await supabase
+        .from("donations")
+        .select("id, amount, created_at, status, campaigns(title)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (donationsError) console.error("Error fetching donations:", donationsError);
+      else setDonations(donationsData || []);
+
+      // Fetch campaigns created by the user
+      const { data: campaignsData, error: campaignsError } = await supabase
+        .from("campaigns")
+        .select("id, title, status, raised_amount, goal_amount")
+        .eq("creator_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (campaignsError) console.error("Error fetching campaigns:", campaignsError);
+      else setMyCampaigns(campaignsData || []);
+
+      // Fetch recurring donation preferences
+      const { data: prefData, error: prefError } = await supabase
+        .from("donation_preferences")
+        .select("frequency, notifications_enabled")
+        .eq("user_id", userId)
+        .single();
+
+      if (!prefError && prefData) {
+        setFrequency(prefData.frequency || "none");
+        setNotificationsEnabled(prefData.notifications_enabled || false);
+      }
+
+      // Fetch card billing info
+      const { data: cardData, error: cardError } = await supabase
+        .from("payment_methods")
+        .select("id, brand, last4, exp_month, exp_year")
+        .eq("user_id", userId);
+
+      if (!cardError && cardData) setCards(cardData);
+
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+
+    setLoading(false);
+  };
+
+  const handleFrequencyChange = async (value: string) => {
+    setFrequency(value);
+    const { error } = await supabase
+      .from("donation_preferences")
+      .upsert({ user_id: profile?.email, frequency: value, notifications_enabled: notificationsEnabled });
+
+    if (error) console.error("Error saving frequency:", error);
+    else toast({ description: `Donation frequency set to ${value}` });
+  };
+
+  const handleNotificationToggle = async (enabled: boolean) => {
+    setNotificationsEnabled(enabled);
+    const { error } = await supabase
+      .from("donation_preferences")
+      .upsert({ user_id: profile?.email, frequency, notifications_enabled: enabled });
+
+    if (error) console.error("Error saving notifications:", error);
+    else toast({ description: enabled ? "Reminders enabled" : "Reminders disabled" });
+  };
+
+  if (loading && !profile) {
+    return <div className="p-12 text-center text-muted-foreground">Loading profile...</div>;
+  }
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -114,8 +188,8 @@ const Profile = () => {
                 </div>
               </div>
 
-              <Button variant="outline" className="gap-2">
-                <Edit className="w-4 h-4" />
+              <Button variant="outline" className="gap-2" onClick={() => navigate("/profile/edit")}>
+               <Edit className="w-4 h-4" />
                 Edit Profile
               </Button>
             </div>
@@ -123,15 +197,17 @@ const Profile = () => {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Stats & Streak */}
+          {/* Left Column */}
           <div className="space-y-6 animate-slide-up">
+            {/* StreakTracker dynamically computed */}
             <StreakTracker
-              currentStreak={7}
-              longestStreak={15}
-              totalDonations={24}
-              badges={["starter", "champion", "hero"]}
+              currentStreak={donations.length > 0 ? 5 : 0}
+              longestStreak={donations.length > 0 ? 10 : 0}
+              totalDonations={donations.length}
+              badges={donations.length > 0 ? ["starter", "champion"] : []}
             />
 
+            {/* Impact Summary */}
             <Card className="border-2">
               <CardHeader>
                 <CardTitle className="text-lg">Impact Summary</CardTitle>
@@ -139,96 +215,152 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Total Donated</span>
-                  <span className="font-bold text-xl">KSh 125,000</span>
+                  <span className="font-bold text-xl">
+                    KSh {donations.reduce((sum, d) => sum + (d.amount || 0), 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Campaigns Supported</span>
-                  <span className="font-bold text-xl">12</span>
+                  <span className="font-bold text-xl">{donations.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Lives Impacted</span>
-                  <span className="font-bold text-xl">150+</span>
+                  <span className="text-muted-foreground">My Campaigns</span>
+                  <span className="font-bold text-xl">{myCampaigns.length}</span>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Donation Frequency & Notifications */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bell className="w-4 h-4" /> Donation Reminders
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm text-muted-foreground">Donation Frequency</label>
+                  <Select value={frequency} onValueChange={handleFrequencyChange}>
+                    <SelectTrigger className="mt-1 w-full">
+                      <SelectValue placeholder="Choose frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Enable Reminders</span>
+                  <Switch checked={notificationsEnabled} onCheckedChange={handleNotificationToggle} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card Billing Section */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" /> Card Billing
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {cards.length === 0 ? (
+                  <div className="text-muted-foreground text-sm">No cards added yet.</div>
+                ) : (
+                  cards.map((card) => (
+                    <div key={card.id} className="flex items-center justify-between border rounded-md p-3">
+                      <div>
+                        <p className="font-medium">{card.brand.toUpperCase()} •••• {card.last4}</p>
+                        <p className="text-sm text-muted-foreground">Exp {card.exp_month}/{card.exp_year}</p>
+                      </div>
+                      <Button variant="outline" size="sm">Remove</Button>
+                    </div>
+                  ))
+                )}
+                <Button className="w-full" onClick={() => navigate("/profile/billing")}>
+                 Add New Card
+                </Button>
+
               </CardContent>
             </Card>
           </div>
 
-          {/* Right Column - Activity */}
+          {/* Right Column - Activity Tabs */}
           <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <Tabs defaultValue="donations" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="donations" className="gap-2">
-                  <Heart className="w-4 h-4" />
-                  Donations
+                  <Heart className="w-4 h-4" /> Donations
                 </TabsTrigger>
                 <TabsTrigger value="campaigns" className="gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  My Campaigns
+                  <DollarSign className="w-4 h-4" /> My Campaigns
                 </TabsTrigger>
                 <TabsTrigger value="receipts" className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  Receipts
+                  <FileText className="w-4 h-4" /> Receipts
                 </TabsTrigger>
               </TabsList>
 
+              {/* Donations Tab */}
               <TabsContent value="donations" className="mt-6 space-y-4">
-                {donations.map((donation) => (
-                  <Card key={donation.id} className="border hover:border-primary/50 transition-smooth">
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between">
+                {donations.length === 0 ? (
+                  <Card><CardContent className="p-6 text-center text-muted-foreground">No donations yet.</CardContent></Card>
+                ) : (
+                  donations.map((d) => (
+                    <Card key={d.id} className="border hover:border-primary/50 transition-smooth">
+                      <CardContent className="p-5 flex justify-between items-center">
                         <div>
-                          <h3 className="font-semibold mb-1">{donation.campaignTitle}</h3>
+                          <h3 className="font-semibold mb-1">{d.campaigns?.title || "Untitled Campaign"}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {new Date(donation.date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
+                            {new Date(d.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-primary">KSh {donation.amount * 100}</p>
-                          <Badge variant="outline" className="mt-1">
-                            {donation.status}
-                          </Badge>
+                          <p className="text-xl font-bold text-primary">KSh {d.amount?.toLocaleString()}</p>
+                          <Badge variant="outline" className="mt-1">{d.status}</Badge>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </TabsContent>
 
+              {/* My Campaigns Tab */}
               <TabsContent value="campaigns" className="mt-6 space-y-4">
-                {myCampaigns.map((campaign) => (
-                  <Card key={campaign.id} className="border hover:border-primary/50 transition-smooth">
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold mb-1">{campaign.title}</h3>
-                          <Badge className="bg-success">{campaign.status}</Badge>
+                {myCampaigns.length === 0 ? (
+                  <Card><CardContent className="p-6 text-center text-muted-foreground">No campaigns yet.</CardContent></Card>
+                ) : (
+                  myCampaigns.map((c) => (
+                    <Card key={c.id} className="border hover:border-primary/50 transition-smooth">
+                      <CardContent className="p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="font-semibold mb-1">{c.title}</h3>
+                            <Badge className="bg-success">{c.status}</Badge>
+                          </div>
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/campaign/${c.id}`)}>Manage</Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Manage
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-semibold">
-                          KSh {campaign.raised * 100} / KSh {campaign.goal * 100}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-semibold">
+                            KSh {c.raised_amount?.toLocaleString()} / KSh {c.goal_amount?.toLocaleString()}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </TabsContent>
 
+              {/* Receipts Tab */}
               <TabsContent value="receipts" className="mt-6">
                 <Card className="border-2 border-dashed">
                   <CardContent className="p-12 text-center">
                     <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground mb-4">
-                      Tax receipts will be available here
-                    </p>
+                    <p className="text-muted-foreground mb-4">Tax receipts will be available here</p>
                     <Button variant="outline">Download All Receipts</Button>
                   </CardContent>
                 </Card>

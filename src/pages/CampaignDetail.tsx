@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Mail, Facebook, Twitter, Instagram, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,7 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CommentSection } from "@/components/CommentSection";
+import ShareCampaignModal from "@/components/ShareCampaignModal";
 
 const CampaignDetail = () => {
   const { id } = useParams();
@@ -32,6 +35,8 @@ const CampaignDetail = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "stripe">("mpesa");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", id],
@@ -74,11 +79,7 @@ const CampaignDetail = () => {
     : null;
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copied!",
-      description: "Campaign link copied to clipboard",
-    });
+    setShareOpen(true);
   };
 
   const handleDonate = async () => {
@@ -378,7 +379,8 @@ const CampaignDetail = () => {
                     <Heart className={`w-4 h-4 ${isFavorite ? "fill-current text-red-500" : ""}`} />
                     Save
                   </Button>
-                  <Button variant="outline" className="flex-1 gap-2" onClick={handleShare}>
+                  <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowShareModal(true)}
+                    >
                     <Share2 className="w-4 h-4" />
                     Share
                   </Button>
@@ -407,6 +409,113 @@ const CampaignDetail = () => {
           <CommentSection campaignId={id!} />
         </div>
       </div>
+
+      {/* Added Share Modal */}
+      <ShareCampaignModal
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        campaign={{
+          title: campaign.title,
+          description: campaign.description,
+          link: window.location.href,
+          category: campaign.category,
+        }}
+      />
+
+<Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+  <DialogContent className="max-w-md">
+    <DialogHeader>
+      <DialogTitle>Share this campaign</DialogTitle>
+    </DialogHeader>
+
+    {/* Tailored message generator */}
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Choose a platform to share this campaign with your friends and supporters.
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {(() => {
+          const baseMessage = (() => {
+            switch (campaign.category?.toLowerCase()) {
+              case "education":
+                return `Support this education campaign: ${campaign.title}`;
+              case "medical":
+                return `Help fund a medical cause: ${campaign.title}`;
+              case "charity":
+                return `Join in supporting this charity drive: ${campaign.title}`;
+              case "community":
+                return `Empower a community through this campaign: ${campaign.title}`;
+              case "environment":
+                return `Protect our planet, support this environmental cause: ${campaign.title}`;
+              case "faith":
+                return `Stand in faith and give toward this mission: ${campaign.title}`;
+              case "justice":
+                return `Stand for justice, support this movement: ${campaign.title}`;
+              case "creative":
+                return `Celebrate creativity, support this arts initiative: ${campaign.title}`;
+              case "sports":
+                return `Help athletes achieve their dreams: ${campaign.title}`;
+              case "business":
+                return `Help businesses grow: ${campaign.title}`;
+              case "animals":
+                return `Show love for animals, support this cause: ${campaign.title}`;
+              case "technology":
+                return `Fuel innovation and progress: ${campaign.title}`
+              case "emergency":
+                return `Assist an urgent cause: ${campaign.title}`;
+              default:
+                return `Check out this campaign: ${campaign.title}`;
+            }
+          })();
+
+          const url = window.location.href;
+          const fullMessage = `${baseMessage}\n\n${url}`;
+
+          const shareOptions = [
+            {
+              name: "WhatsApp",
+              icon: MessageCircle,
+              url: `https://wa.me/?text=${encodeURIComponent(fullMessage)}`
+            },
+            {
+              name: "X",
+              icon: Twitter,
+              url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${baseMessage} ${url}`)}`
+            },
+            {
+              name: "Facebook",
+              icon: Facebook,
+              url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+            },
+            {
+              name: "Instagram",
+              icon: Instagram,
+              url: url // fallback; open link manually
+            },
+            {
+              name: "Email",
+              icon: Mail,
+              url: `mailto:?subject=${encodeURIComponent(`Support ${campaign.title}`)}&body=${encodeURIComponent(fullMessage)}`
+            },
+          ];
+
+          return shareOptions.map(({ name, icon: Icon, url }) => (
+            <Button
+              key={name}
+              variant="outline"
+              className="flex items-center justify-center gap-2"
+              onClick={() => window.open(url, "_blank")}
+            >
+              <Icon className="w-4 h-4" />
+              {name}
+            </Button>
+          ));
+        })()}
+        </div>
+       </div>
+      </DialogContent>
+     </Dialog>
     </div>
   );
 };
