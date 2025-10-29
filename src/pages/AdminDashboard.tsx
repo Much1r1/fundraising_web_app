@@ -33,6 +33,38 @@ const AdminDashboard = () => {
     checkAdminAccess();
   }, []);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    // Set up real-time subscriptions for stats updates
+    const usersChannel = supabase
+      .channel('users-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    const campaignsChannel = supabase
+      .channel('campaigns-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    const donationsChannel = supabase
+      .channel('donations-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'donations' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(usersChannel);
+      supabase.removeChannel(campaignsChannel);
+      supabase.removeChannel(donationsChannel);
+    };
+  }, [isAdmin]);
+
   const checkAdminAccess = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
