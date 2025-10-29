@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
 import Layout from "./components/Layout";
+import { ChatBot } from "./components/ChatBot";
 import Home from "./pages/Home";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetail from "./pages/CampaignDetail";
@@ -26,6 +27,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <ChatBot />
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />

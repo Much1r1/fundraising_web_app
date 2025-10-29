@@ -13,8 +13,10 @@ import {
   TrendingUp,
   Shield,
   Flag,
-  Settings
+  Settings,
+  MessageSquare
 } from "lucide-react";
+import { ChatManagement } from "@/components/admin/ChatManagement";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -184,9 +186,13 @@ const AdminDashboard = () => {
 
         {/* Management Tabs */}
         <Tabs defaultValue="campaigns" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="chat">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Chat
+            </TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
 
@@ -214,6 +220,10 @@ const AdminDashboard = () => {
                 </p>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="chat" className="mt-6">
+            <ChatManagement />
           </TabsContent>
 
           <TabsContent value="reports" className="mt-6">
