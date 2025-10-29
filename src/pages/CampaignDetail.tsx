@@ -330,13 +330,6 @@ const CampaignDetail = () => {
 
                 {/* Donation Amount */}
                 <div className="space-y-3">
-                  <label className="text-sm font-medium">Enter your custom donation</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    </span>
-                    <Input
-                      type="number"
-                      placeholder="Ksh 0.00"
                   <label className="text-sm font-medium">Enter your donation</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -360,11 +353,10 @@ const CampaignDetail = () => {
                         size="sm"
                         onClick={() => setDonationAmount(amount.toString())}
                       >
-                        {amount}
+                        KSh {amount}
                       </Button>
                     ))}
                   </div>
-                 </div>
                 </div>
 
                 {/* Donate Button */}
@@ -388,9 +380,7 @@ const CampaignDetail = () => {
                     <Heart className={`w-4 h-4 ${isFavorite ? "fill-current text-red-500" : ""}`} />
                     Save
                   </Button>
-                  <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowShareModal(true)}
-                  />
-                  <Button variant="outline" className="flex-1 gap-2" onClick={handleShare}>
+                  <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowShareModal(true)}>
                     <Share2 className="w-4 h-4" />
                     Share
                   </Button>
