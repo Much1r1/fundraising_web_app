@@ -107,6 +107,7 @@ const Campaigns = () => {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="health">Health</SelectItem>
+                <SelectItem value="medical">Medical</SelectItem>
                 <SelectItem value="education">Education</SelectItem>
                 <SelectItem value="emergency">Emergency</SelectItem>
                 <SelectItem value="community">Community</SelectItem>

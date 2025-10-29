@@ -337,6 +337,14 @@ const CampaignDetail = () => {
                     <Input
                       type="number"
                       placeholder="Ksh 0.00"
+                  <label className="text-sm font-medium">Enter your donation</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      KSh
+                    </span>
+                    <Input
+                      type="number"
+                      placeholder="0.00"
                       value={donationAmount}
                       onChange={(e) => setDonationAmount(e.target.value)}
                       className="pl-8 text-lg"
@@ -356,6 +364,7 @@ const CampaignDetail = () => {
                       </Button>
                     ))}
                   </div>
+                 </div>
                 </div>
 
                 {/* Donate Button */}
@@ -380,7 +389,8 @@ const CampaignDetail = () => {
                     Save
                   </Button>
                   <Button variant="outline" className="flex-1 gap-2" onClick={() => setShowShareModal(true)}
-                    >
+                  />
+                  <Button variant="outline" className="flex-1 gap-2" onClick={handleShare}>
                     <Share2 className="w-4 h-4" />
                     Share
                   </Button>
