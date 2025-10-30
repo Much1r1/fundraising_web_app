@@ -18,10 +18,10 @@ const Campaigns = () => {
   const { data: campaigns, isLoading, error } = useQuery({
     queryKey: ["campaigns", category, searchQuery, sortBy],
     queryFn: async (): Promise<any[]> => {
-      let query = (supabase as any)
+      let query = supabase
         .from("campaigns")
         .select("*")
-        .eq("approval_status", "approved"); // Only show approved campaigns
+        .eq("approval_status", "approved");
 
       // Filter by category
       if (category !== "all") {
@@ -55,18 +55,9 @@ const Campaigns = () => {
         throw error;
       }
 
-      return data;
+      return data || [];
     },
   });
-
-  // Show error toast if fetch fails
-  if (error) {
-    toast({
-      title: "Error loading campaigns",
-      description: "Please try again later",
-      variant: "destructive",
-    });
-  }
 
   // Calculate days left for a campaign
   const getDaysLeft = (endDate: string | null) => {

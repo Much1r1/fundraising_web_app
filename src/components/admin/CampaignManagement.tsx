@@ -72,7 +72,7 @@ export const CampaignManagement = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPendingCampaigns((data as any) || []);
+      setPendingCampaigns((data || []) as any);
     } catch (error) {
       console.error("Error fetching pending campaigns:", error);
       toast({
@@ -97,7 +97,7 @@ export const CampaignManagement = () => {
           approved_at: new Date().toISOString(),
           campaign_status: "active",
           visibility: "public",
-        } as any)
+        })
         .eq("id", campaignId);
 
       if (error) throw error;
@@ -129,7 +129,7 @@ export const CampaignManagement = () => {
           approved_by: user?.id,
           approved_at: new Date().toISOString(),
           rejection_reason: rejectionReason || "Did not meet community guidelines",
-        } as any)
+        })
         .eq("id", campaignId);
 
       if (error) throw error;

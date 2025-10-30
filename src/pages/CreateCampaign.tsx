@@ -91,7 +91,7 @@ const CreateCampaign = () => {
           campaign_status: "draft",
           visibility: "private",
           approval_status: "pending",
-        } as any)
+        })
         .select()
         .single();
 

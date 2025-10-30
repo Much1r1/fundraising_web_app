@@ -93,6 +93,9 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           campaign_organizers: string | null
           campaign_status: Database["public"]["Enums"]["campaign_status"] | null
           category: string
@@ -104,6 +107,7 @@ export type Database = {
           id: string
           image_url: string | null
           location: string | null
+          rejection_reason: string | null
           story: string
           title: string
           updated_at: string | null
@@ -115,6 +119,9 @@ export type Database = {
           visibility: Database["public"]["Enums"]["visibility"] | null
         }
         Insert: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           campaign_organizers?: string | null
           campaign_status?:
             | Database["public"]["Enums"]["campaign_status"]
@@ -128,6 +135,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string | null
+          rejection_reason?: string | null
           story: string
           title: string
           updated_at?: string | null
@@ -139,6 +147,9 @@ export type Database = {
           visibility?: Database["public"]["Enums"]["visibility"] | null
         }
         Update: {
+          approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           campaign_organizers?: string | null
           campaign_status?:
             | Database["public"]["Enums"]["campaign_status"]
@@ -152,6 +163,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string | null
+          rejection_reason?: string | null
           story?: string
           title?: string
           updated_at?: string | null
