@@ -17,10 +17,11 @@ const Campaigns = () => {
   // Fetch campaigns from Supabase
   const { data: campaigns, isLoading, error } = useQuery({
     queryKey: ["campaigns", category, searchQuery, sortBy],
-    queryFn: async () => {
-      let query = supabase
+    queryFn: async (): Promise<any[]> => {
+      let query = (supabase as any)
         .from("campaigns")
-        .select("*");
+        .select("*")
+        .eq("approval_status", "approved"); // Only show approved campaigns
 
       // Filter by category
       if (category !== "all") {
@@ -179,20 +180,20 @@ const Campaigns = () => {
           ) : campaigns && campaigns.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => (
-                <CampaignCard
-                  key={campaign.id}
-                  id={campaign.id}
-                  title={campaign.title}
-                  description={campaign.description}
-                  imageUrl={campaign.image_url || undefined}
-                  goalAmount={Number(campaign.goal_amount)}
-                  currentAmount={Number(campaign.current_amount)}
-                  category={campaign.category}
-                  location={campaign.location || undefined}
-                  daysLeft={getDaysLeft(campaign.end_date)}
-                  isVerified={campaign.verification_status === "verified"}
-                  isTrending={Number(campaign.current_amount) > Number(campaign.goal_amount) * 0.5}
-                />
+                  <CampaignCard
+                    key={campaign.id}
+                    id={campaign.id}
+                    title={campaign.title}
+                    description={campaign.description}
+                    imageUrl={campaign.image_url || undefined}
+                    goalAmount={Number(campaign.goal_amount)}
+                    currentAmount={Number(campaign.current_amount)}
+                    category={campaign.category}
+                    location={campaign.location || undefined}
+                    daysLeft={getDaysLeft(campaign.end_date)}
+                    isVerified={true}
+                    isTrending={Number(campaign.current_amount) > Number(campaign.goal_amount) * 0.5}
+                  />
               ))}
             </div>
           ) : (

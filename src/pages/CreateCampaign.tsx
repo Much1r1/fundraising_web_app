@@ -76,7 +76,6 @@ const CreateCampaign = () => {
         return;
       }
 
-      // Create campaign in database
       const { data: campaign, error } = await supabase
         .from("campaigns")
         .insert({
@@ -91,15 +90,16 @@ const CreateCampaign = () => {
           user_id: user.id,
           campaign_status: "draft",
           visibility: "private",
-        })
+          approval_status: "pending",
+        } as any)
         .select()
         .single();
 
       if (error) throw error;
 
       toast({
-        title: "Campaign created! 🎉",
-        description: "Your campaign has been created successfully. Review it before publishing.",
+        title: "Campaign Submitted!",
+        description: "Your campaign is pending admin review. You'll be notified once it's approved.",
       });
 
       navigate(`/campaigns/${campaign.id}`);
