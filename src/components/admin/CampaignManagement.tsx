@@ -118,19 +118,31 @@ export const CampaignManagement = () => {
 
   const fetchCampaigns = async () => {
     try {
-      const { data, error } = await supabase
+      // First fetch campaigns
+      const { data: campaignsData, error: campaignsError } = await supabase
         .from("campaigns")
-        .select(`
-          *,
-          users:user_id (
-            full_name,
-            email
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setCampaigns((data || []) as any);
+      if (campaignsError) throw campaignsError;
+
+      // Then fetch user details for each campaign
+      const campaignsWithUsers = await Promise.all(
+        (campaignsData || []).map(async (campaign) => {
+          const { data: userData } = await supabase
+            .from("users")
+            .select("full_name, email")
+            .eq("id", campaign.user_id)
+            .single();
+
+          return {
+            ...campaign,
+            users: userData || { full_name: "Unknown", email: "N/A" },
+          };
+        })
+      );
+
+      setCampaigns(campaignsWithUsers as any);
     } catch (error) {
       console.error("Error fetching campaigns:", error);
       toast({
