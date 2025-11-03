@@ -14,7 +14,9 @@ import {
   Shield,
   Flag,
   Settings,
-  MessageSquare
+  MessageSquare,
+  Clock,
+  CheckCircle
 } from "lucide-react";
 import { ChatManagement } from "@/components/admin/ChatManagement";
 import { CampaignManagement } from "@/components/admin/CampaignManagement";
@@ -26,6 +28,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCampaigns: 0,
+    pendingCampaigns: 0,
+    approvedCampaigns: 0,
     totalDonations: 0,
     totalAmount: 0,
   });
@@ -115,21 +119,36 @@ const AdminDashboard = () => {
         .from("users")
         .select("*", { count: "exact", head: true });
 
-      // Fetch campaigns count
+      // Fetch all campaigns
       const { count: campaignsCount } = await supabase
         .from("campaigns")
         .select("*", { count: "exact", head: true });
 
-      // Fetch donations count and total amount
+      // Fetch pending campaigns count
+      const { count: pendingCount } = await supabase
+        .from("campaigns")
+        .select("*", { count: "exact", head: true })
+        .eq("approval_status", "pending");
+
+      // Fetch approved campaigns count
+      const { count: approvedCount } = await supabase
+        .from("campaigns")
+        .select("*", { count: "exact", head: true })
+        .eq("approval_status", "approved");
+
+      // Fetch donations count and total amount from approved campaigns
       const { data: donations } = await supabase
         .from("donations")
-        .select("amount");
+        .select("amount, campaign_id, campaigns!inner(approval_status)")
+        .eq("campaigns.approval_status", "approved");
 
       const totalAmount = donations?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
       setStats({
         totalUsers: usersCount || 0,
         totalCampaigns: campaignsCount || 0,
+        pendingCampaigns: pendingCount || 0,
+        approvedCampaigns: approvedCount || 0,
         totalDonations: donations?.length || 0,
         totalAmount,
       });
@@ -165,7 +184,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="border-2 hover:border-primary/50 transition-smooth">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -187,6 +206,30 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalCampaigns}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pending Campaigns
+              </CardTitle>
+              <Clock className="w-4 h-4 text-warning" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-warning">{stats.pendingCampaigns}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 hover:border-primary/50 transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Approved Campaigns
+              </CardTitle>
+              <CheckCircle className="w-4 h-4 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-success">{stats.approvedCampaigns}</div>
             </CardContent>
           </Card>
 

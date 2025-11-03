@@ -106,6 +106,7 @@ export type Database = {
           goal_amount: number
           id: string
           image_url: string | null
+          is_featured: boolean | null
           location: string | null
           rejection_reason: string | null
           story: string
@@ -134,6 +135,7 @@ export type Database = {
           goal_amount: number
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           location?: string | null
           rejection_reason?: string | null
           story: string
@@ -162,6 +164,7 @@ export type Database = {
           goal_amount?: number
           id?: string
           image_url?: string | null
+          is_featured?: boolean | null
           location?: string | null
           rejection_reason?: string | null
           story?: string
