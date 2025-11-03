@@ -11,7 +11,7 @@ import Campaigns from "./pages/Campaigns";
 import CampaignDetail from "./pages/CampaignDetail";
 import CreateCampaign from "./pages/CreateCampaign";
 import Auth from "./pages/Auth";
-import AdminDashboard from "./pages/AdminDashboard"
+import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import EditProfile from "./pages/EditProfile";
