@@ -23,6 +23,7 @@ import { CampaignManagement } from "@/components/admin/CampaignManagement";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { ReportsManagement } from "@/components/admin/ReportsManagement";
 import { LiveActivityWidget } from "@/components/admin/LiveActivityWidget";
+import { AdminNotificationDropdown } from "@/components/admin/AdminNotificationDropdown";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -176,14 +177,17 @@ const AdminDashboard = () => {
     <div className="min-h-screen py-12 px-4">
       <div className="container mx-auto max-w-7xl">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-lg gradient-primary flex items-center justify-center">
-            <Shield className="w-6 h-6 text-primary-foreground" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg gradient-primary flex items-center justify-center">
+              <Shield className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Manage your platform</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage your platform</p>
-          </div>
+          <AdminNotificationDropdown />
         </div>
 
         {/* Stats Grid */}
