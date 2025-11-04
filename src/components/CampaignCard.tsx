@@ -18,6 +18,7 @@ interface CampaignCardProps {
   donorCount?: number;
   isTrending?: boolean;
   isVerified?: boolean;
+  organizer?: string;
 }
 
 const CampaignCard = ({
@@ -33,6 +34,7 @@ const CampaignCard = ({
   donorCount = 0,
   isTrending = false,
   isVerified = false,
+  organizer,
 }: CampaignCardProps) => {
   const progress = (currentAmount / goalAmount) * 100;
   const progressColor = progress >= 75 ? "gradient-success" : "gradient-primary";
@@ -93,6 +95,12 @@ const CampaignCard = ({
             {title}
           </h3>
         </Link>
+        
+        {organizer && (
+          <p className="text-xs text-muted-foreground mb-2">
+            by {organizer}
+          </p>
+        )}
         
         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
           {description}

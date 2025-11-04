@@ -184,6 +184,7 @@ const Campaigns = () => {
                     daysLeft={getDaysLeft(campaign.end_date)}
                     isVerified={true}
                     isTrending={Number(campaign.current_amount) > Number(campaign.goal_amount) * 0.5}
+                    organizer={campaign.campaign_organizers || undefined}
                   />
               ))}
             </div>
