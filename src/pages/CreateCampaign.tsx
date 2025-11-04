@@ -87,6 +87,7 @@ const CreateCampaign = () => {
           end_date: values.endDate,
           location: values.location,
           video_url: values.videoUrl || null,
+          campaign_organizers: values.organizer,
           user_id: user.id,
           campaign_status: "draft",
           visibility: "private",
@@ -98,8 +99,8 @@ const CreateCampaign = () => {
       if (error) throw error;
 
       toast({
-        title: "Campaign Submitted!",
-        description: "Your campaign is pending admin review. You'll be notified once it's approved.",
+        title: "Campaign Submitted Successfully!",
+        description: "You'll be notified when the admin approves your campaign.",
       });
 
       navigate(`/campaigns/${campaign.id}`);
