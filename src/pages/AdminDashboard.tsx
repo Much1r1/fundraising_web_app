@@ -22,6 +22,7 @@ import { ChatManagement } from "@/components/admin/ChatManagement";
 import { CampaignManagement } from "@/components/admin/CampaignManagement";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { ReportsManagement } from "@/components/admin/ReportsManagement";
+import { LiveActivityWidget } from "@/components/admin/LiveActivityWidget";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -260,6 +261,11 @@ const AdminDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Live Activity Widget */}
+        <div className="mb-8">
+          <LiveActivityWidget />
         </div>
 
         {/* Management Tabs */}
