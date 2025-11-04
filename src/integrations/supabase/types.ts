@@ -722,6 +722,10 @@ export type Database = {
         | "comment"
         | "admin_alert"
         | "system"
+        | "campaign_approval"
+        | "donation"
+        | "report"
+        | "milestone"
       payment_method: "mpesa" | "paypal" | "card"
       payment_status:
         | "pending"
@@ -900,6 +904,10 @@ export const Constants = {
         "comment",
         "admin_alert",
         "system",
+        "campaign_approval",
+        "donation",
+        "report",
+        "milestone",
       ],
       payment_method: ["mpesa", "paypal", "card"],
       payment_status: [
