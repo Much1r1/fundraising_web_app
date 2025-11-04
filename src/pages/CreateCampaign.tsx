@@ -105,8 +105,19 @@ const CreateCampaign = () => {
         .single();
 
       if (error) {
-        console.error("Database error:", error);
-        throw error;
+        console.error("Database error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create campaign. Please try again.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
       }
 
       console.log("Campaign created successfully:", campaign);
