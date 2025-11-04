@@ -41,14 +41,26 @@ const CampaignDetail = () => {
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: campaignData, error } = await supabase
         .from("campaigns")
         .select("*")
         .eq("id", id)
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Fetch user data separately
+      if (campaignData?.user_id) {
+        const { data: userData } = await supabase
+          .from("users")
+          .select("full_name, avatar_url")
+          .eq("id", campaignData.user_id)
+          .single();
+        
+        return { ...campaignData, owner: userData };
+      }
+      
+      return campaignData;
     },
   });
 
@@ -244,13 +256,13 @@ const CampaignDetail = () => {
                 <h3 className="mb-4">Campaign Organizer</h3>
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src="" />
+                    <AvatarImage src={(campaign as any).owner?.avatar_url || ""} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                      {campaign.title.charAt(0)}
+                      {campaign.campaign_organizers?.charAt(0) || (campaign as any).owner?.full_name?.charAt(0) || campaign.title.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-semibold">Campaign Creator</p>
+                    <p className="font-semibold">{campaign.campaign_organizers || (campaign as any).owner?.full_name || "Campaign Creator"}</p>
                     <p className="text-sm text-muted-foreground">
                       Created {new Date(campaign.created_at).toLocaleDateString()}
                     </p>
