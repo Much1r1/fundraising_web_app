@@ -21,6 +21,7 @@ import {
 import { ChatManagement } from "@/components/admin/ChatManagement";
 import { CampaignManagement } from "@/components/admin/CampaignManagement";
 import { UserManagement } from "@/components/admin/UserManagement";
+import { ReportsManagement } from "@/components/admin/ReportsManagement";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -286,16 +287,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="reports" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reports & Flags</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Reports management features coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            <ReportsManagement />
           </TabsContent>
         </Tabs>
       </div>
