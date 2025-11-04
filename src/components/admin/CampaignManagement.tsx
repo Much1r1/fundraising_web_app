@@ -34,6 +34,7 @@ interface Campaign {
   category: string;
   created_at: string;
   user_id: string;
+  campaign_organizers?: string | null;
   users: {
     full_name: string;
     email: string;
@@ -390,7 +391,7 @@ export const CampaignManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium text-sm">{campaign.users?.full_name || 'Unknown'}</div>
+                        <div className="font-medium text-sm">{campaign.campaign_organizers || campaign.users?.full_name || 'Unknown'}</div>
                         <div className="text-xs text-muted-foreground">{campaign.users?.email || 'N/A'}</div>
                       </div>
                     </TableCell>
@@ -449,7 +450,7 @@ export const CampaignManagement = () => {
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <div className="text-sm text-muted-foreground">Creator</div>
-                                  <div className="font-medium">{campaign.users?.full_name}</div>
+                                  <div className="font-medium">{campaign.campaign_organizers || campaign.users?.full_name}</div>
                                   <div className="text-sm text-muted-foreground">{campaign.users?.email}</div>
                                 </div>
                                 <div>
