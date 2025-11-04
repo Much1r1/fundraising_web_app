@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { ChatManagement } from "@/components/admin/ChatManagement";
 import { CampaignManagement } from "@/components/admin/CampaignManagement";
+import { UserManagement } from "@/components/admin/UserManagement";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -277,16 +278,7 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="users" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  User management features coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            <UserManagement />
           </TabsContent>
 
           <TabsContent value="chat" className="mt-6">
