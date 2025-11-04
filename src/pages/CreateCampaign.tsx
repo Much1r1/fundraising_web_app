@@ -64,9 +64,10 @@ const CreateCampaign = () => {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (authError || !user) {
+        console.error("Auth error:", authError);
         toast({
           title: "Authentication required",
           description: "Please sign in to create a campaign",
@@ -75,6 +76,13 @@ const CreateCampaign = () => {
         navigate("/auth");
         return;
       }
+
+      console.log("Creating campaign with data:", {
+        title: values.title,
+        goal_amount: parseFloat(values.goalAmount),
+        category: values.category,
+        user_id: user.id,
+      });
 
       const { data: campaign, error } = await supabase
         .from("campaigns")
@@ -96,19 +104,25 @@ const CreateCampaign = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
+
+      console.log("Campaign created successfully:", campaign);
 
       toast({
         title: "Campaign Submitted Successfully!",
         description: "You'll be notified when the admin approves your campaign.",
       });
 
-      navigate(`/campaigns/${campaign.id}`);
-    } catch (error) {
+      navigate(`/campaigns`);
+    } catch (error: any) {
       console.error("Error creating campaign:", error);
+      const errorMessage = error?.message || "Failed to create campaign. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to create campaign. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
