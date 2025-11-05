@@ -287,7 +287,7 @@ export type Database = {
         Row: {
           campaign_id: string | null
           content: string | null
-          created_at: string | null
+          created_at: string
           id: string
           likes_count: number | null
           media_url: string | null
@@ -299,7 +299,7 @@ export type Database = {
         Insert: {
           campaign_id?: string | null
           content?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           likes_count?: number | null
           media_url?: string | null
@@ -311,7 +311,7 @@ export type Database = {
         Update: {
           campaign_id?: string | null
           content?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           likes_count?: number | null
           media_url?: string | null
@@ -445,7 +445,7 @@ export type Database = {
       notifications: {
         Row: {
           campaign_id: string | null
-          created_at: string | null
+          created_at: string
           delivery_channel: Database["public"]["Enums"]["channel_type"] | null
           id: string
           is_read: boolean | null
@@ -458,7 +458,7 @@ export type Database = {
         }
         Insert: {
           campaign_id?: string | null
-          created_at?: string | null
+          created_at?: string
           delivery_channel?: Database["public"]["Enums"]["channel_type"] | null
           id?: string
           is_read?: boolean | null
@@ -471,7 +471,7 @@ export type Database = {
         }
         Update: {
           campaign_id?: string | null
-          created_at?: string | null
+          created_at?: string
           delivery_channel?: Database["public"]["Enums"]["channel_type"] | null
           id?: string
           is_read?: boolean | null
