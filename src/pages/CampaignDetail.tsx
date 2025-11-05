@@ -22,6 +22,9 @@ import {
   Shield,
   ArrowLeft,
   Loader2,
+  Trophy,
+  Medal,
+  Award,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -188,6 +191,37 @@ const CampaignDetail = () => {
   const daysLeft = campaign.end_date
     ? Math.ceil((parseUTCDate(campaign.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
     : null;
+
+  // Calculate leaderboard from donations
+  type DonorStats = {
+    donorId: string;
+    name: string;
+    avatar: string;
+    totalAmount: number;
+    donationCount: number;
+  };
+
+  const leaderboard = donations
+    .filter(d => !d.is_anonymous && d.donor_id)
+    .reduce((acc, donation) => {
+      const donorId = donation.donor_id;
+      if (!acc[donorId]) {
+        acc[donorId] = {
+          donorId,
+          name: donation.donor?.full_name || "Anonymous",
+          avatar: donation.donor?.avatar_url || "",
+          totalAmount: 0,
+          donationCount: 0,
+        };
+      }
+      acc[donorId].totalAmount += Number(donation.amount);
+      acc[donorId].donationCount += 1;
+      return acc;
+    }, {} as Record<string, DonorStats>);
+
+  const topDonors = (Object.values(leaderboard) as DonorStats[])
+    .sort((a, b) => b.totalAmount - a.totalAmount)
+    .slice(0, 10);
 
   const handleShare = () => {
     setShareOpen(true);
@@ -368,6 +402,68 @@ const CampaignDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Top Contributors Leaderboard */}
+            {topDonors.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Trophy className="w-5 h-5 text-primary" />
+                    <h3>Top Contributors</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {topDonors.map((donor, index) => {
+                      const rank = index + 1;
+                      const getBadgeIcon = () => {
+                        if (rank === 1) return <Trophy className="w-5 h-5 text-yellow-500" />;
+                        if (rank === 2) return <Medal className="w-5 h-5 text-gray-400" />;
+                        if (rank === 3) return <Award className="w-5 h-5 text-amber-600" />;
+                        return null;
+                      };
+
+                      return (
+                        <div
+                          key={donor.donorId}
+                          className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="relative">
+                              {rank <= 3 ? (
+                                <div className="absolute -top-1 -right-1 z-10">
+                                  {getBadgeIcon()}
+                                </div>
+                              ) : null}
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={donor.avatar} />
+                                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                  {donor.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-muted-foreground min-w-[24px]">
+                                  #{rank}
+                                </span>
+                                <p className="font-semibold truncate">{donor.name}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {donor.donationCount} {donor.donationCount === 1 ? "donation" : "donations"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-primary whitespace-nowrap">
+                              KSh {donor.totalAmount.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Donation Sidebar */}
