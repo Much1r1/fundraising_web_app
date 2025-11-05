@@ -23,10 +23,11 @@ import {
   ArrowLeft,
   Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CommentSection } from "@/components/CommentSection";
 import ShareCampaignModal from "@/components/ShareCampaignModal";
+import confetti from "canvas-confetti";
 
 const CampaignDetail = () => {
   const { id } = useParams();
@@ -38,6 +39,9 @@ const CampaignDetail = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [donations, setDonations] = useState<any[]>([]);
+  const [realtimeAmount, setRealtimeAmount] = useState(0);
+  const [supportersCount, setSupportersCount] = useState(0);
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", id],
@@ -52,6 +56,110 @@ const CampaignDetail = () => {
       return data;
     },
   });
+
+  // Fetch initial donations
+  const { data: initialDonations } = useQuery({
+    queryKey: ["donations", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("donations")
+        .select(`
+          *,
+          donor:users!donations_donor_id_fkey(full_name, avatar_url)
+        `)
+        .eq("campaign_id", id)
+        .eq("payment_status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
+  // Initialize donations and calculate totals
+  useEffect(() => {
+    if (initialDonations) {
+      setDonations(initialDonations);
+      const total = initialDonations.reduce((sum, d) => sum + Number(d.amount), 0);
+      setRealtimeAmount(total);
+      
+      // Count unique donors
+      const uniqueDonors = new Set(initialDonations.map(d => d.donor_id).filter(Boolean));
+      setSupportersCount(uniqueDonors.size);
+    }
+  }, [initialDonations]);
+
+  // Real-time subscription for new donations
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel("donations_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "donations",
+          filter: `campaign_id=eq.${id}`,
+        },
+        async (payload) => {
+          const newDonation = payload.new;
+          
+          // Only process completed donations
+          if (newDonation.payment_status !== "completed") return;
+
+          // Fetch donor details
+          let donorData = null;
+          if (newDonation.donor_id) {
+            const { data } = await supabase
+              .from("users")
+              .select("full_name, avatar_url")
+              .eq("id", newDonation.donor_id)
+              .single();
+            donorData = data;
+          }
+
+          // Add donor data to donation
+          const donationWithDonor = {
+            ...newDonation,
+            donor: donorData,
+          };
+
+          // Update donations list
+          setDonations((prev) => [donationWithDonor, ...prev].slice(0, 10));
+          
+          // Update total amount
+          setRealtimeAmount((prev) => prev + Number(newDonation.amount));
+          
+          // Update supporters count
+          setSupportersCount((prev) => prev + 1);
+
+          // Trigger confetti for donations >= 100
+          if (Number(newDonation.amount) >= 100) {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#8B5CF6', '#EC4899', '#F59E0B'],
+            });
+          }
+
+          // Show toast notification
+          toast({
+            title: "New Donation! 🎉",
+            description: `${donorData?.full_name || "Someone"} just donated KSh ${Number(newDonation.amount).toLocaleString()}`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, toast]);
 
   if (isLoading) {
     return (
@@ -74,7 +182,9 @@ const CampaignDetail = () => {
     );
   }
 
-  const progress = (Number(campaign.current_amount) / Number(campaign.goal_amount)) * 100;
+  // Use realtime amount if available, otherwise fall back to campaign amount
+  const totalRaised = realtimeAmount > 0 ? realtimeAmount : Number(campaign.current_amount);
+  const progress = (totalRaised / Number(campaign.goal_amount)) * 100;
   const daysLeft = campaign.end_date
     ? Math.ceil((parseUTCDate(campaign.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
     : null;
@@ -215,7 +325,7 @@ const CampaignDetail = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 rounded-lg bg-secondary/50">
                     <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">{supportersCount}</p>
                     <p className="text-sm text-muted-foreground">Supporters</p>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-secondary/50">
@@ -276,9 +386,9 @@ const CampaignDetail = () => {
                     </div>
                   </div>
                   
-                  <div>
+                  <div className="transition-all duration-500">
                     <p className="text-3xl font-bold text-foreground">
-                      KSh {Number(campaign.current_amount).toLocaleString()}
+                      KSh {totalRaised.toLocaleString()}
                     </p>
                     <p className="text-muted-foreground">
                       raised of KSh {Number(campaign.goal_amount).toLocaleString()} goal
@@ -387,6 +497,47 @@ const CampaignDetail = () => {
                 </div>
 
                 <Separator />
+
+                {/* Recent Donations */}
+                {donations.length > 0 && (
+                  <>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm">Recent Donations</h4>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {donations.map((donation, index) => (
+                          <div
+                            key={donation.id}
+                            className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 animate-fade-in"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={donation.donor?.avatar_url} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {donation.is_anonymous
+                                  ? "A"
+                                  : donation.donor?.full_name?.charAt(0) || "D"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {donation.is_anonymous
+                                  ? "Anonymous"
+                                  : donation.donor?.full_name || "Anonymous"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {parseUTCDate(donation.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <p className="text-sm font-bold text-primary whitespace-nowrap">
+                              KSh {Number(donation.amount).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <Separator />
+                  </>
+                )}
 
                 {/* Trust Indicators */}
                 <div className="space-y-3 text-sm">
