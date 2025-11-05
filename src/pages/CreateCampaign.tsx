@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Calendar, Upload, Video, Heart } from "lucide-react";
+import { Calendar, Upload, Video, Heart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +33,8 @@ const CreateCampaign = () => {
   const { toast } = useToast();
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<string>("warm");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -78,6 +80,47 @@ const CreateCampaign = () => {
 
   const removeImage = (index: number) => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEnhanceStory = async () => {
+    const currentStory = form.getValues("story");
+    
+    if (!currentStory || currentStory.length < 20) {
+      toast({
+        title: "Story too short",
+        description: "Please write at least 20 characters before enhancing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsEnhancing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("enhance-story", {
+        body: { story: currentStory, tone: selectedTone },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.enhancedStory) {
+        form.setValue("story", data.enhancedStory);
+        toast({
+          title: "Story enhanced!",
+          description: "Your story has been improved for maximum impact.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error enhancing story:", error);
+      toast({
+        title: "Enhancement failed",
+        description: error.message || "Failed to enhance story. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -226,6 +269,32 @@ const CreateCampaign = () => {
                           {...field}
                         />
                       </FormControl>
+                      <div className="flex items-center gap-3 mt-3 p-3 bg-muted/50 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        <div className="flex-1 flex items-center gap-2">
+                          <span className="text-sm font-medium">AI Story Assistant:</span>
+                          <Select value={selectedTone} onValueChange={setSelectedTone}>
+                            <SelectTrigger className="w-[140px] h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="warm">Warm</SelectItem>
+                              <SelectItem value="professional">Professional</SelectItem>
+                              <SelectItem value="urgent">Urgent</SelectItem>
+                              <SelectItem value="hopeful">Hopeful</SelectItem>
+                              <SelectItem value="inspiring">Inspiring</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleEnhanceStory}
+                          disabled={isEnhancing}
+                        >
+                          {isEnhancing ? "Enhancing..." : "Enhance Story"}
+                        </Button>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

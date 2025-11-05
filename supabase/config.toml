@@ -2,3 +2,6 @@ project_id = "tsfrkycayhymzmqamnsu"
 
 [functions.mpesa-payment]
 verify_jwt = false
+
+[functions.enhance-story]
+verify_jwt = false
