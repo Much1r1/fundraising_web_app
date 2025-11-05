@@ -18,6 +18,8 @@ import NotFound from "./pages/NotFound";
 import EditProfile from "./pages/EditProfile";
 import Billing from "./pages/Billing";
 import AddCardPage from "./pages/AddCard";
+import HowItWorks from "./pages/HowItWorks";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 const App = () => (
@@ -34,6 +36,8 @@ const App = () => (
               <Route path="/campaigns" element={<Campaigns />} />
               <Route path="/campaigns/create" element={<CreateCampaign />} />
               <Route path="/campaigns/:id" element={<CampaignDetail />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/about" element={<About />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin" element={<AdminDashboard />} />
