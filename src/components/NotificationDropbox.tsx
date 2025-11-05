@@ -148,7 +148,7 @@ export const NotificationDropdown = () => {
                     {notification.message}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(`${notification.created_at}Z`), { addSuffix: true })}
                   </p>
                 </div>
               </DropdownMenuItem>

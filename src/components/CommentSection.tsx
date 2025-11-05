@@ -191,7 +191,7 @@ export const CommentSection = ({ campaignId }: CommentSectionProps) => {
                         {comment.users?.full_name || comment.users?.email?.split("@")[0] || "Anonymous"}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(`${comment.created_at}Z`), { addSuffix: true })}
                       </span>
                     </div>
                     <p className="text-muted-foreground">{comment.content}</p>

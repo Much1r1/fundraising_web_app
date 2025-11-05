@@ -198,7 +198,7 @@ export function AdminNotificationDropdown() {
                       {notification.message}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(notification.created_at), {
+                      {formatDistanceToNow(new Date(`${notification.created_at}Z`), {
                         addSuffix: true,
                       })}
                     </p>
