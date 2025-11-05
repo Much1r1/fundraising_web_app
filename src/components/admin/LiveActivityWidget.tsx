@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Heart, TrendingUp, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { parseUTCDate } from "@/lib/utils";
 
 interface ActivityItem {
   id: string;
@@ -51,7 +52,7 @@ export const LiveActivityWidget = () => {
             title: `New donation received`,
             subtitle: donation.campaigns?.title || "Unknown campaign",
             amount: Number(donation.amount),
-            timestamp: new Date(donation.created_at),
+            timestamp: parseUTCDate(donation.created_at),
           });
         });
 
@@ -61,7 +62,7 @@ export const LiveActivityWidget = () => {
             type: "campaign_update",
             title: `Campaign ${campaign.approval_status}`,
             subtitle: campaign.title,
-            timestamp: new Date(campaign.updated_at),
+            timestamp: parseUTCDate(campaign.updated_at),
           });
         });
 
@@ -101,7 +102,7 @@ export const LiveActivityWidget = () => {
             title: "New donation received",
             subtitle: campaign?.title || "Unknown campaign",
             amount: Number(payload.new.amount),
-            timestamp: new Date(payload.new.created_at),
+            timestamp: parseUTCDate(payload.new.created_at),
           };
 
           setActivities((prev) => [newActivity, ...prev].slice(0, 10));
@@ -130,7 +131,7 @@ export const LiveActivityWidget = () => {
             type: "campaign_update",
             title: `Campaign ${payload.new.approval_status}`,
             subtitle: payload.new.title,
-            timestamp: new Date(payload.new.updated_at),
+            timestamp: parseUTCDate(payload.new.updated_at),
           };
 
           setActivities((prev) => [newActivity, ...prev].slice(0, 10));

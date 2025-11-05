@@ -10,6 +10,7 @@ import { Mail, Facebook, Twitter, Instagram, MessageCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { parseUTCDate } from "@/lib/utils";
 import {
   Heart,
   Share2,
@@ -75,7 +76,7 @@ const CampaignDetail = () => {
 
   const progress = (Number(campaign.current_amount) / Number(campaign.goal_amount)) * 100;
   const daysLeft = campaign.end_date
-    ? Math.ceil((new Date(campaign.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((parseUTCDate(campaign.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
     : null;
 
   const handleShare = () => {
@@ -230,7 +231,7 @@ const CampaignDetail = () => {
                   <div className="text-center p-4 rounded-lg bg-secondary/50">
                     <Calendar className="w-6 h-6 mx-auto mb-2 text-primary" />
                     <p className="text-2xl font-bold">
-                      {new Date(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {parseUTCDate(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                     <p className="text-sm text-muted-foreground">Started</p>
                   </div>
@@ -251,7 +252,7 @@ const CampaignDetail = () => {
                   <div>
                     <p className="font-semibold">{campaign.campaign_organizers || "Campaign Creator"}</p>
                     <p className="text-sm text-muted-foreground">
-                      Created {new Date(campaign.created_at).toLocaleDateString()}
+                      Created {parseUTCDate(campaign.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

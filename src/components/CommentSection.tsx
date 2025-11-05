@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { MessageSquare, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { parseUTCDate } from "@/lib/utils";
 
 interface Comment {
   id: string;
@@ -74,19 +75,19 @@ export const CommentSection = ({ campaignId }: CommentSectionProps) => {
       return;
     }
 
-    // Fetch user data separately for each comment
+    // Fetch user data from public_profiles view
     if (data) {
       const commentsWithUsers = await Promise.all(
         data.map(async (comment) => {
           const { data: userData } = await supabase
-            .from("users")
-            .select("full_name, avatar_url, email")
+            .from("public_profiles")
+            .select("full_name, avatar_url")
             .eq("id", comment.user_id)
-            .single();
+            .maybeSingle();
           
           return {
             ...comment,
-            users: userData || undefined
+            users: userData ? { full_name: userData.full_name, avatar_url: userData.avatar_url, email: '' } : undefined
           };
         })
       );
@@ -191,7 +192,7 @@ export const CommentSection = ({ campaignId }: CommentSectionProps) => {
                         {comment.users?.full_name || comment.users?.email?.split("@")[0] || "Anonymous"}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(`${comment.created_at}Z`), { addSuffix: true })}
+                        {formatDistanceToNow(parseUTCDate(comment.created_at), { addSuffix: true })}
                       </span>
                     </div>
                     <p className="text-muted-foreground">{comment.content}</p>
