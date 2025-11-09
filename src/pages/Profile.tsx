@@ -255,48 +255,29 @@ const Profile = () => {
     }
 
     try {
-      // TODO: In production, this should create a Stripe subscription or MPesa recurring payment
-      const { error } = await supabase
-        .from("recurring_subscriptions")
-        .insert({
-          user_id: profile!.userId!,
-          campaign_id: null, // Can be set to a specific campaign or null for general donations
+      // Create Stripe subscription checkout session
+      const { data, error } = await supabase.functions.invoke('create-stripe-session', {
+        body: {
+          type: 'subscription',
+          userId: profile!.userId!,
           amount: parseFloat(recurringAmount),
-          frequency: recurringFrequency,
-          active: true,
-          payment_method: "pending_setup" // TODO: Set after payment method is added
-        });
+          metadata: {
+            frequency: recurringFrequency,
+            enableReminders: reminderEnabled.toString(),
+            email: profile?.email,
+          },
+        },
+      });
 
       if (error) throw error;
 
-      // Create reminder if enabled
-      if (reminderEnabled) {
-        const nextDue = new Date();
-        switch (recurringFrequency) {
-          case "daily": nextDue.setDate(nextDue.getDate() + 1); break;
-          case "weekly": nextDue.setDate(nextDue.getDate() + 7); break;
-          case "monthly": nextDue.setMonth(nextDue.getMonth() + 1); break;
-          case "yearly": nextDue.setFullYear(nextDue.getFullYear() + 1); break;
-        }
-
-        await supabase.from("donor_reminders").insert({
-          user_id: profile!.userId!,
-          campaign_id: null,
-          amount: parseFloat(recurringAmount),
-          frequency: recurringFrequency,
-          next_due: nextDue.toISOString(),
-          enabled: true,
+      if (data?.url) {
+        toast({
+          title: "Redirecting",
+          description: "Setting up your recurring donation...",
         });
+        window.location.href = data.url;
       }
-
-      refetchSubscriptions();
-      toast({ 
-        title: "Success", 
-        description: "Recurring donation plan created. Complete payment setup to activate." 
-      });
-      
-      setRecurringAmount("");
-      setReminderEnabled(false);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
@@ -637,19 +618,67 @@ const Profile = () => {
                       Add payment methods to enable quick donations and recurring payments
                     </p>
 
-                    {/* TODO: Integrate with Stripe/PayPal */}
                     <div className="space-y-3">
-                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke('create-stripe-session', {
+                              body: {
+                                type: 'setup',
+                                userId: profile?.userId,
+                                metadata: { email: profile?.email },
+                              },
+                            });
+                            if (error) throw error;
+                            if (data?.url) window.location.href = data.url;
+                          } catch (error: any) {
+                            toast({
+                              title: "Error",
+                              description: error.message || "Failed to setup payment method",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
                         <CreditCard className="w-4 h-4" />
                         Add Credit/Debit Card (Stripe)
                       </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={() => {
+                          toast({
+                            title: "Coming Soon",
+                            description: "PayPal integration will be available soon.",
+                          });
+                        }}
+                      >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l1.12-7.106c.082-.518.526-.9 1.05-.9h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.15.054-.295.077-.437a4.43 4.43 0 0 0-.859-.68z"/>
                         </svg>
                         Connect PayPal
                       </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={async () => {
+                          // Check if Payment Request API is available
+                          if (!window.PaymentRequest) {
+                            toast({
+                              title: "Not Supported",
+                              description: "Google Pay is not supported on this browser.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          toast({
+                            title: "Coming Soon",
+                            description: "Google Pay integration requires additional setup.",
+                          });
+                        }}
+                      >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm7.5 12a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z"/>
                         </svg>

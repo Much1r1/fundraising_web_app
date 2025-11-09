@@ -1,16 +1,143 @@
-# Backend Integration Guide for Profile Features
+# Backend Integration Guide
 
-This document outlines the backend integration steps needed to fully activate the enhanced Profile page features.
+This guide provides instructions for completing the backend integrations for the enhanced MyProfile features.
 
-## Table of Contents
-1. [Payment Methods Integration](#payment-methods-integration)
-2. [Recurring Donations](#recurring-donations)
-3. [Donation Reminders](#donation-reminders)
-4. [Environment Variables](#environment-variables)
+## ✅ Implemented Features
 
----
+The following Edge Functions have been created and are ready to use:
 
-## 1. Payment Methods Integration
+### 1. Create Stripe Session (`create-stripe-session`)
+- **Location**: `supabase/functions/create-stripe-session/index.ts`
+- **Purpose**: Creates Stripe Checkout sessions for payment setup, one-time payments, and subscriptions
+- **Status**: ✅ Implemented and deployed
+
+### 2. Stripe Webhook Handler (`stripe-webhook`)
+- **Location**: `supabase/functions/stripe-webhook/index.ts`
+- **Purpose**: Handles Stripe webhook events to process payments and manage subscriptions
+- **Status**: ✅ Implemented and deployed
+- **Action Required**: Configure webhook URL in Stripe Dashboard (see below)
+
+### 3. Process Reminders (`process-reminders`)
+- **Location**: `supabase/functions/process-reminders/index.ts`
+- **Purpose**: Processes donation reminders and sends notifications
+- **Status**: ✅ Implemented and deployed
+- **Action Required**: Set up cron job (see below)
+
+## 🔧 Required Configuration Steps
+
+### Step 1: Configure Stripe Webhook
+
+1. Go to [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/webhooks)
+2. Click "Add endpoint"
+3. Enter the webhook URL:
+   ```
+   https://tsfrkycayhymzmqamnsu.supabase.co/functions/v1/stripe-webhook
+   ```
+4. Select events to listen to:
+   - `checkout.session.completed`
+   - `invoice.payment_succeeded`
+   - `customer.subscription.deleted`
+5. Copy the webhook signing secret
+6. Add it to Supabase secrets as `STRIPE_WEBHOOK_SECRET`
+
+### Step 2: Set Up Reminder Cron Job
+
+Run the following SQL in your Supabase SQL Editor to schedule hourly reminder processing:
+
+```sql
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Schedule the reminder processor to run every hour
+SELECT cron.schedule(
+  'process-donation-reminders',
+  '0 * * * *', -- Every hour at minute 0
+  $$
+  SELECT
+    net.http_post(
+        url:='https://tsfrkycayhymzmqamnsu.supabase.co/functions/v1/process-reminders',
+        headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZnJreWNheWh5bXptcWFtbnN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3Nzc0OTYsImV4cCI6MjA3MzM1MzQ5Nn0.O9RmZiilRAJqvJC1Hl6Bb2UMpWWsIAbqQ60Qr1u-L0o"}'::jsonb,
+        body:='{"scheduled": true}'::jsonb
+    ) as request_id;
+  $$
+);
+```
+
+### Step 3: (Optional) Enable Email Reminders
+
+To send email reminders via Resend:
+
+1. Sign up at [resend.com](https://resend.com)
+2. Verify your email domain at [resend.com/domains](https://resend.com/domains)
+3. Create an API key at [resend.com/api-keys](https://resend.com/api-keys)
+4. Add the secret to Supabase:
+   ```bash
+   # Use Lovable AI to add the secret:
+   # "Add RESEND_API_KEY secret to Supabase"
+   ```
+5. Uncomment the email sending code in `supabase/functions/process-reminders/index.ts`
+
+## 📋 Environment Variables Summary
+
+The following secrets are configured or need configuration:
+
+| Secret | Status | Purpose |
+|--------|--------|---------|
+| STRIPE_SECRET_KEY | ✅ Configured | Stripe API secret key |
+| STRIPE_WEBHOOK_SECRET | ⚠️ Needs setup | Stripe webhook signing secret |
+| PAYPAL_CLIENT_ID | ❌ Future | PayPal client ID (optional) |
+| PAYPAL_CLIENT_SECRET | ❌ Future | PayPal client secret (optional) |
+| GOOGLE_PAY_MERCHANT_ID | ❌ Future | Google Pay merchant ID (optional) |
+| RESEND_API_KEY | ❌ Optional | Resend API key for emails |
+
+## 🧪 Testing the Integration
+
+### Test Payment Setup
+1. Navigate to Profile → Payments tab
+2. Click "Add Credit/Debit Card (Stripe)"
+3. Complete the Stripe Checkout flow
+4. Verify redirection back to profile
+
+### Test Recurring Donations
+1. Navigate to Profile → Recurring tab
+2. Enter amount and frequency
+3. Enable reminders (optional)
+4. Click "Create Recurring Donation"
+5. Complete Stripe subscription setup
+6. Verify subscription appears in the list
+
+### Test Webhook Handling
+1. Make a test payment or subscription in Stripe
+2. Check Supabase Edge Function logs for `stripe-webhook`
+3. Verify donation records are created in the database
+4. Verify notifications are sent to users
+
+### Test Reminder Processing
+1. Create a reminder with a past `next_due` date
+2. Manually invoke the edge function:
+   ```bash
+   curl -X POST https://tsfrkycayhymzmqamnsu.supabase.co/functions/v1/process-reminders \
+     -H "Authorization: Bearer YOUR_ANON_KEY" \
+     -H "Content-Type: application/json"
+   ```
+3. Check that notifications were created
+4. Verify `next_due` was updated
+
+## 🔒 Security Notes
+
+- All Edge Functions use proper CORS headers
+- Webhook signature verification prevents unauthorized requests
+- Anonymous donations respect user privacy settings
+- RLS policies protect user data
+
+## 📚 Additional Resources
+
+- [Stripe Checkout Documentation](https://stripe.com/docs/payments/checkout)
+- [Stripe Webhooks Guide](https://stripe.com/docs/webhooks)
+- [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
+- [Supabase pg_cron Extension](https://supabase.com/docs/guides/database/extensions/pg_cron)
+
 
 ### Stripe Integration
 
