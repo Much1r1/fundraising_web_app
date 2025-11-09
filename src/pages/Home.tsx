@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Heart, TrendingUp, Users, Award, Loader2 } from "lucide-react";
 import CampaignCard from "@/components/CampaignCard";
+import GlobalActivityFeed from "@/components/GlobalActivityFeed";
 
 const Home = () => {
   // Fetch featured campaigns
@@ -120,8 +121,19 @@ const Home = () => {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* Global Activity Feed */}
       <section className="py-16 px-4 bg-secondary/50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="mb-8">
+            <h2 className="text-foreground mb-2">Recent Activity</h2>
+            <p className="text-muted-foreground">See the latest donations from our community</p>
+          </div>
+          <GlobalActivityFeed />
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-center mb-12">How It Works</h2>
           
