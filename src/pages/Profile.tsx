@@ -23,6 +23,7 @@ import {
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 import StreakTracker from "@/components/StreakTracker";
+import { CampaignAnalytics } from "@/components/CampaignAnalytics";
 import { 
   Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText, 
   Lock, LogOut, CreditCard, Bell, TrendingUp, Users, 
@@ -519,6 +520,38 @@ const Profile = () => {
 
               {/* My Campaigns Tab */}
               <TabsContent value="campaigns" className="mt-6 space-y-4">
+                {/* Campaigns Started Summary */}
+                {campaigns.length > 0 && (
+                  <Card className="border-2 bg-gradient-to-br from-primary/10 to-accent/10">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        Campaigns Started
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground">Total Campaigns</p>
+                          <p className="text-3xl font-bold">{campaigns.length}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground">First Campaign</p>
+                          <p className="text-lg font-semibold">
+                            {new Date(Math.min(...campaigns.map((c: any) => new Date(c.created_at).getTime()))).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground">Latest Campaign</p>
+                          <p className="text-lg font-semibold">
+                            {new Date(Math.max(...campaigns.map((c: any) => new Date(c.created_at).getTime()))).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <Card className="border-2">
                   <CardHeader>
                     <CardTitle>My Campaigns</CardTitle>
@@ -540,43 +573,52 @@ const Profile = () => {
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-8">
                         {campaigns.map((campaign: any) => (
-                          <Card key={campaign.id} className="border">
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-lg mb-2">{campaign.title}</h4>
-                                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                                    <span className="flex items-center gap-1">
-                                      <DollarSign className="w-3 h-3" />
-                                      KSh {Number(campaign.current_amount).toLocaleString()} / KSh {Number(campaign.goal_amount).toLocaleString()}
-                                    </span>
-                                    <Badge variant={
-                                      campaign.approval_status === 'approved' ? 'default' :
-                                      campaign.approval_status === 'pending' ? 'secondary' :
-                                      'destructive'
-                                    }>
-                                      {campaign.approval_status}
-                                    </Badge>
-                                    <Badge variant="outline">
-                                      {campaign.campaign_status}
-                                    </Badge>
+                          <div key={campaign.id} className="space-y-4">
+                            <Card className="border">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-lg mb-2">{campaign.title}</h4>
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                                      <span className="flex items-center gap-1">
+                                        <DollarSign className="w-3 h-3" />
+                                        KSh {Number(campaign.current_amount).toLocaleString()} / KSh {Number(campaign.goal_amount).toLocaleString()}
+                                      </span>
+                                      <Badge variant={
+                                        campaign.approval_status === 'approved' ? 'default' :
+                                        campaign.approval_status === 'pending' ? 'secondary' :
+                                        'destructive'
+                                      }>
+                                        {campaign.approval_status}
+                                      </Badge>
+                                      <Badge variant="outline">
+                                        {campaign.campaign_status}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      Created {new Date(campaign.created_at).toLocaleDateString()}
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    Created {new Date(campaign.created_at).toLocaleDateString()}
-                                  </p>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                                  >
+                                    View
+                                  </Button>
                                 </div>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => navigate(`/campaigns/${campaign.id}`)}
-                                >
-                                  View
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
+                              </CardContent>
+                            </Card>
+                            
+                            {/* Campaign Analytics */}
+                            {campaign.approval_status === 'approved' && (
+                              <CampaignAnalytics campaignId={campaign.id} />
+                            )}
+                            
+                            <Separator />
+                          </div>
                         ))}
                       </div>
                     )}

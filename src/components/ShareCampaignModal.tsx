@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Share2, Clipboard, MessageCircle, Twitter } from "lucide-react";
+import { useCampaignAnalytics } from "@/hooks/use-campaign-analytics";
 
 interface Campaign {
   title: string;
@@ -18,6 +19,7 @@ interface Campaign {
   link: string;
   category?: string;
   progress?: number;
+  id?: string;
 }
 
 interface ShareCampaignModalProps {
@@ -31,6 +33,7 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
   onClose,
   campaign,
 }) => {
+  const { trackEvent } = useCampaignAnalytics();
   const templates = [
     {
       id: "default",
@@ -69,10 +72,16 @@ const ShareCampaignModal: React.FC<ShareCampaignModalProps> = ({
   };
 
   const shareToWhatsApp = () => {
+    if (campaign.id) {
+      trackEvent(campaign.id, "share", { platform: "whatsapp" });
+    }
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const shareToTwitter = () => {
+    if (campaign.id) {
+      trackEvent(campaign.id, "share", { platform: "twitter" });
+    }
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`,
       "_blank"

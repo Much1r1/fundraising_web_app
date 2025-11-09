@@ -31,10 +31,12 @@ import { useToast } from "@/hooks/use-toast";
 import { CommentSection } from "@/components/CommentSection";
 import ShareCampaignModal from "@/components/ShareCampaignModal";
 import confetti from "canvas-confetti";
+import { useCampaignAnalytics } from "@/hooks/use-campaign-analytics";
 
 const CampaignDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
+  const { trackEvent } = useCampaignAnalytics();
   const [donationAmount, setDonationAmount] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -45,6 +47,13 @@ const CampaignDetail = () => {
   const [donations, setDonations] = useState<any[]>([]);
   const [realtimeAmount, setRealtimeAmount] = useState(0);
   const [supportersCount, setSupportersCount] = useState(0);
+
+  // Track campaign view
+  useEffect(() => {
+    if (id) {
+      trackEvent(id, "view");
+    }
+  }, [id]);
 
   const { data: campaign, isLoading } = useQuery({
     queryKey: ["campaign", id],
@@ -662,6 +671,7 @@ const CampaignDetail = () => {
         isOpen={shareOpen}
         onClose={() => setShareOpen(false)}
         campaign={{
+          id: campaign.id,
           title: campaign.title,
           description: campaign.description,
           link: window.location.href,
