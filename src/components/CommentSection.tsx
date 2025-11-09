@@ -75,19 +75,23 @@ export const CommentSection = ({ campaignId }: CommentSectionProps) => {
       return;
     }
 
-    // Fetch user data from public_profiles view
+    // Fetch user data from users table to get show_name_publicly setting
     if (data) {
       const commentsWithUsers = await Promise.all(
         data.map(async (comment) => {
           const { data: userData } = await supabase
-            .from("public_profiles")
-            .select("full_name, avatar_url")
+            .from("users")
+            .select("full_name, avatar_url, show_name_publicly")
             .eq("id", comment.user_id)
             .maybeSingle();
           
           return {
             ...comment,
-            users: userData ? { full_name: userData.full_name, avatar_url: userData.avatar_url, email: '' } : undefined
+            users: userData ? { 
+              full_name: userData.show_name_publicly ? userData.full_name : 'Anonymous',
+              avatar_url: userData.show_name_publicly ? userData.avatar_url : undefined,
+              email: '' 
+            } : undefined
           };
         })
       );
