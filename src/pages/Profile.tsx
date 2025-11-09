@@ -185,6 +185,25 @@ const Profile = () => {
     },
   });
 
+  // Fetch user campaigns
+  const { data: campaigns = [], isLoading: campaignsLoading, error: campaignsError } = useQuery({
+    queryKey: ["user-campaigns", profile?.userId],
+    enabled: !!profile?.userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("user_id", profile!.userId!)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching campaigns:", error);
+        throw error;
+      }
+      return data || [];
+    },
+  });
+
   // Handle password change
   const handleChangePassword = async () => {
     if (!newPassword || !confirmPassword) {
@@ -451,9 +470,12 @@ const Profile = () => {
           {/* Right Column - Main Content */}
           <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <Tabs defaultValue="donations" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="donations" className="gap-2">
                   <Heart className="w-4 h-4" /> Donations
+                </TabsTrigger>
+                <TabsTrigger value="campaigns" className="gap-2">
+                  <FileText className="w-4 h-4" /> Campaigns
                 </TabsTrigger>
                 <TabsTrigger value="recurring" className="gap-2">
                   <Repeat className="w-4 h-4" /> Recurring
@@ -493,6 +515,73 @@ const Profile = () => {
                     </Card>
                   ))
                 )}
+              </TabsContent>
+
+              {/* My Campaigns Tab */}
+              <TabsContent value="campaigns" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>My Campaigns</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {campaignsLoading ? (
+                      <Skeleton className="h-20 w-full" />
+                    ) : campaignsError ? (
+                      <div className="text-destructive p-4 border border-destructive/50 rounded-lg">
+                        <p className="font-medium">Error loading campaigns</p>
+                        <p className="text-sm mt-1">{campaignsError.message}</p>
+                      </div>
+                    ) : campaigns.length === 0 ? (
+                      <div className="text-center py-8">
+                        <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground mb-4">No campaigns created yet</p>
+                        <Button onClick={() => navigate("/campaigns/create")}>
+                          Create Your First Campaign
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {campaigns.map((campaign: any) => (
+                          <Card key={campaign.id} className="border">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-lg mb-2">{campaign.title}</h4>
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                                    <span className="flex items-center gap-1">
+                                      <DollarSign className="w-3 h-3" />
+                                      KSh {Number(campaign.current_amount).toLocaleString()} / KSh {Number(campaign.goal_amount).toLocaleString()}
+                                    </span>
+                                    <Badge variant={
+                                      campaign.approval_status === 'approved' ? 'default' :
+                                      campaign.approval_status === 'pending' ? 'secondary' :
+                                      'destructive'
+                                    }>
+                                      {campaign.approval_status}
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      {campaign.campaign_status}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Created {new Date(campaign.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => navigate(`/campaigns/${campaign.id}`)}
+                                >
+                                  View
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               {/* Recurring Donations Tab */}
