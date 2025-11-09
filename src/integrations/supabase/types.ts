@@ -442,6 +442,56 @@ export type Database = {
         }
         Relationships: []
       }
+      donor_reminders: {
+        Row: {
+          amount: number | null
+          campaign_id: string | null
+          created_at: string | null
+          email_enabled: boolean | null
+          enabled: boolean | null
+          frequency: string | null
+          id: string
+          in_app_enabled: boolean | null
+          next_due: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          email_enabled?: boolean | null
+          enabled?: boolean | null
+          frequency?: string | null
+          id?: string
+          in_app_enabled?: boolean | null
+          next_due?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          campaign_id?: string | null
+          created_at?: string | null
+          email_enabled?: boolean | null
+          enabled?: boolean | null
+          frequency?: string | null
+          id?: string
+          in_app_enabled?: boolean | null
+          next_due?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donor_reminders_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           campaign_id: string | null
@@ -525,6 +575,56 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      recurring_subscriptions: {
+        Row: {
+          active: boolean | null
+          amount: number
+          campaign_id: string | null
+          created_at: string | null
+          frequency: string
+          id: string
+          payment_method: string | null
+          start_date: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          amount: number
+          campaign_id?: string | null
+          created_at?: string | null
+          frequency: string
+          id?: string
+          payment_method?: string | null
+          start_date?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          amount?: number
+          campaign_id?: string | null
+          created_at?: string | null
+          frequency?: string
+          id?: string
+          payment_method?: string | null
+          start_date?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_subscriptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       "reports/flags": {
         Row: {
@@ -630,6 +730,7 @@ export type Database = {
           is_active: boolean
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          show_name_publicly: boolean | null
           updated_at: string
           verification_status: Database["public"]["Enums"]["verification_status"]
           wallet_balance: number
@@ -644,6 +745,7 @@ export type Database = {
           is_active?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          show_name_publicly?: boolean | null
           updated_at?: string
           verification_status?: Database["public"]["Enums"]["verification_status"]
           wallet_balance?: number
@@ -658,6 +760,7 @@ export type Database = {
           is_active?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          show_name_publicly?: boolean | null
           updated_at?: string
           verification_status?: Database["public"]["Enums"]["verification_status"]
           wallet_balance?: number

@@ -1,14 +1,35 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import StreakTracker from "@/components/StreakTracker";
-import { Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText } from "lucide-react";
+import { 
+  Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText, 
+  Lock, LogOut, CreditCard, Bell, TrendingUp, Users, 
+  AlertCircle, CheckCircle, Repeat, X 
+} from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -20,14 +41,20 @@ const Profile = () => {
     joinedDate?: string;
     bio?: string;
     avatarUrl?: string;
+    userId?: string;
+    showNamePublicly?: boolean;
   };
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [donations, setDonations] = useState<any[]>([]);
-  const [myCampaigns, setMyCampaigns] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Removed: Recurring donation preferences and card billing (tables don't exist yet)
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // Recurring donation state
+  const [recurringAmount, setRecurringAmount] = useState("");
+  const [recurringFrequency, setRecurringFrequency] = useState("monthly");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   const buildProfile = (u: any): ProfileData => {
     const meta = (u?.user_metadata as any) || {};
@@ -43,6 +70,8 @@ const Profile = () => {
       joinedDate,
       bio: meta.bio || "",
       avatarUrl,
+      userId: u?.id,
+      showNamePublicly: meta.show_name_publicly !== false,
     };
   };
 
@@ -52,7 +81,6 @@ const Profile = () => {
         navigate("/auth");
       } else {
         setProfile(buildProfile(session.user));
-        fetchUserData(session.user.id);
       }
     });
 
@@ -61,48 +89,237 @@ const Profile = () => {
         navigate("/auth");
       } else {
         setProfile(buildProfile(session.user));
-        fetchUserData(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const fetchUserData = async (userId: string) => {
-    setLoading(true);
-
-    try {
-      // Fetch donations made by the user - simplified query to avoid type issues
-      // @ts-ignore - Complex Supabase type inference
-      const donationsResult = await supabase
+  // Fetch user analytics
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ["user-analytics", profile?.userId],
+    enabled: !!profile?.userId,
+    queryFn: async () => {
+      const userId = profile!.userId!;
+      
+      // Get total donations and count
+      const { data: donationsData, error: donationsError } = await supabase
         .from("donations")
-        .select("id, amount, created_at, status, campaign_id")
+        .select("amount")
+        .eq("donor_id", userId)
+        .eq("payment_status", "completed");
+
+      if (donationsError) throw donationsError;
+
+      const totalDonated = donationsData?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
+      const donationsCount = donationsData?.length || 0;
+
+      // Get unique campaigns supported
+      const uniqueCampaigns = new Set(donationsData?.map(d => (d as any).campaign_id)).size;
+
+      // Get recurring subscriptions count
+      const { count: recurringCount, error: recurringError } = await supabase
+        .from("recurring_subscriptions")
+        .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
+        .eq("active", true);
+
+      if (recurringError) throw recurringError;
+
+      return {
+        totalDonated,
+        donationsCount,
+        campaignsSupported: uniqueCampaigns,
+        recurringSubscriptions: recurringCount || 0,
+      };
+    },
+  });
+
+  // Fetch user donations
+  const { data: donations = [], isLoading: donationsLoading } = useQuery({
+    queryKey: ["user-donations", profile?.userId],
+    enabled: !!profile?.userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("donations")
+        .select("id, amount, created_at, payment_status, campaign_id, is_anonymous")
+        .eq("donor_id", profile!.userId!)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch recurring subscriptions
+  const { data: subscriptions = [], isLoading: subscriptionsLoading, refetch: refetchSubscriptions } = useQuery({
+    queryKey: ["user-subscriptions", profile?.userId],
+    enabled: !!profile?.userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("recurring_subscriptions")
+        .select("*")
+        .eq("user_id", profile!.userId!)
         .order("created_at", { ascending: false });
 
-      if (donationsResult.error) console.error("Error fetching donations:", donationsResult.error);
-      else setDonations(donationsResult.data || []);
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-      // Fetch campaigns created by the user
-      // @ts-ignore - Complex Supabase type inference
-      const campaignsResult = await supabase
-        .from("campaigns")
-        .select("id, title, status, raised_amount, goal_amount")
-        .eq("creator_id", userId)
-        .order("created_at", { ascending: false });
+  // Fetch notifications
+  const { data: notifications = [], isLoading: notificationsLoading } = useQuery({
+    queryKey: ["user-notifications", profile?.userId],
+    enabled: !!profile?.userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", profile!.userId!)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-      if (campaignsResult.error) console.error("Error fetching campaigns:", campaignsResult.error);
-      else setMyCampaigns(campaignsResult.data || []);
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
-    } catch (error) {
-      console.error("Error fetching user data:", error);
+  // Handle password change
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast({ title: "Error", description: "Please fill in both password fields", variant: "destructive" });
+      return;
     }
 
-    setLoading(false);
+    if (newPassword !== confirmPassword) {
+      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Password updated successfully" });
+      setShowPasswordDialog(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+      toast({ title: "Logged out", description: "You have been logged out successfully" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
 
-  if (loading && !profile) {
+  // Handle anonymous toggle
+  const handleAnonymousToggle = async (checked: boolean) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { show_name_publicly: checked }
+      });
+
+      if (error) throw error;
+
+      setProfile(prev => prev ? { ...prev, showNamePublicly: checked } : null);
+      toast({ 
+        title: "Updated", 
+        description: checked 
+          ? "Your name will appear on donation feeds" 
+          : "You will appear as anonymous on future donations" 
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  // Create recurring subscription
+  const handleCreateRecurring = async () => {
+    if (!recurringAmount || parseFloat(recurringAmount) <= 0) {
+      toast({ title: "Error", description: "Please enter a valid amount", variant: "destructive" });
+      return;
+    }
+
+    try {
+      // TODO: In production, this should create a Stripe subscription or MPesa recurring payment
+      const { error } = await supabase
+        .from("recurring_subscriptions")
+        .insert({
+          user_id: profile!.userId!,
+          campaign_id: null, // Can be set to a specific campaign or null for general donations
+          amount: parseFloat(recurringAmount),
+          frequency: recurringFrequency,
+          active: true,
+          payment_method: "pending_setup" // TODO: Set after payment method is added
+        });
+
+      if (error) throw error;
+
+      // Create reminder if enabled
+      if (reminderEnabled) {
+        const nextDue = new Date();
+        switch (recurringFrequency) {
+          case "daily": nextDue.setDate(nextDue.getDate() + 1); break;
+          case "weekly": nextDue.setDate(nextDue.getDate() + 7); break;
+          case "monthly": nextDue.setMonth(nextDue.getMonth() + 1); break;
+          case "yearly": nextDue.setFullYear(nextDue.getFullYear() + 1); break;
+        }
+
+        await supabase.from("donor_reminders").insert({
+          user_id: profile!.userId!,
+          campaign_id: null,
+          amount: parseFloat(recurringAmount),
+          frequency: recurringFrequency,
+          next_due: nextDue.toISOString(),
+          enabled: true,
+        });
+      }
+
+      refetchSubscriptions();
+      toast({ 
+        title: "Success", 
+        description: "Recurring donation plan created. Complete payment setup to activate." 
+      });
+      
+      setRecurringAmount("");
+      setReminderEnabled(false);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  // Cancel subscription
+  const handleCancelSubscription = async (subscriptionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("recurring_subscriptions")
+        .update({ active: false })
+        .eq("id", subscriptionId);
+
+      if (error) throw error;
+
+      refetchSubscriptions();
+      toast({ title: "Cancelled", description: "Recurring donation cancelled" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  if (!profile) {
     return <div className="p-12 text-center text-muted-foreground">Loading profile...</div>;
   }
 
@@ -153,62 +370,129 @@ const Profile = () => {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column */}
+          {/* Left Column - Analytics & Quick Actions */}
           <div className="space-y-6 animate-slide-up">
-            {/* StreakTracker dynamically computed */}
+            {/* Analytics Card */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  Your Impact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {analyticsLoading ? (
+                  <>
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                      <span className="text-muted-foreground">Total Donated</span>
+                      <span className="font-bold text-xl text-primary">
+                        KSh {analytics?.totalDonated.toLocaleString() || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                      <span className="text-muted-foreground">Donations</span>
+                      <span className="font-bold text-xl">{analytics?.donationsCount || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                      <span className="text-muted-foreground">Campaigns Supported</span>
+                      <span className="font-bold text-xl">{analytics?.campaignsSupported || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                      <span className="text-muted-foreground">Recurring</span>
+                      <span className="font-bold text-xl">{analytics?.recurringSubscriptions || 0}</span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Account Actions */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Account Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-2"
+                  onClick={() => setShowPasswordDialog(true)}
+                >
+                  <Lock className="w-4 h-4" />
+                  Change Password
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                  onClick={() => setShowLogoutDialog(true)}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Donation Privacy */}
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Privacy Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="public-name">Show my name publicly</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If disabled, you'll appear as anonymous
+                    </p>
+                  </div>
+                  <Switch 
+                    id="public-name"
+                    checked={profile.showNamePublicly}
+                    onCheckedChange={handleAnonymousToggle}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             <StreakTracker
               currentStreak={donations.length > 0 ? 5 : 0}
               longestStreak={donations.length > 0 ? 10 : 0}
               totalDonations={donations.length}
               badges={donations.length > 0 ? ["starter", "champion"] : []}
             />
-
-            {/* Impact Summary */}
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="text-lg">Impact Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Total Donated</span>
-                  <span className="font-bold text-xl">
-                    KSh {donations.reduce((sum, d) => sum + (d.amount || 0), 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Campaigns Supported</span>
-                  <span className="font-bold text-xl">{donations.length}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">My Campaigns</span>
-                  <span className="font-bold text-xl">{myCampaigns.length}</span>
-                </div>
-              </CardContent>
-            </Card>
-
           </div>
 
-          {/* Right Column - Activity Tabs */}
+          {/* Right Column - Main Content */}
           <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <Tabs defaultValue="donations" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="donations" className="gap-2">
                   <Heart className="w-4 h-4" /> Donations
                 </TabsTrigger>
-                <TabsTrigger value="campaigns" className="gap-2">
-                  <DollarSign className="w-4 h-4" /> My Campaigns
+                <TabsTrigger value="recurring" className="gap-2">
+                  <Repeat className="w-4 h-4" /> Recurring
                 </TabsTrigger>
-                <TabsTrigger value="receipts" className="gap-2">
-                  <FileText className="w-4 h-4" /> Receipts
+                <TabsTrigger value="payments" className="gap-2">
+                  <CreditCard className="w-4 h-4" /> Payments
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="gap-2">
+                  <Bell className="w-4 h-4" /> Alerts
                 </TabsTrigger>
               </TabsList>
 
               {/* Donations Tab */}
               <TabsContent value="donations" className="mt-6 space-y-4">
-                {donations.length === 0 ? (
+                {donationsLoading ? (
+                  <Card><CardContent className="p-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+                ) : donations.length === 0 ? (
                   <Card><CardContent className="p-6 text-center text-muted-foreground">No donations yet.</CardContent></Card>
                 ) : (
-                  donations.map((d) => (
+                  donations.map((d: any) => (
                     <Card key={d.id} className="border hover:border-primary/50 transition-smooth">
                       <CardContent className="p-5 flex justify-between items-center">
                         <div>
@@ -216,10 +500,13 @@ const Profile = () => {
                           <p className="text-sm text-muted-foreground">
                             {new Date(d.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                           </p>
+                          {d.is_anonymous && (
+                            <Badge variant="secondary" className="mt-2">Anonymous</Badge>
+                          )}
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-primary">KSh {d.amount?.toLocaleString()}</p>
-                          <Badge variant="outline" className="mt-1">{d.status}</Badge>
+                          <p className="text-xl font-bold text-primary">KSh {Number(d.amount).toLocaleString()}</p>
+                          <Badge variant="outline" className="mt-1">{d.payment_status}</Badge>
                         </div>
                       </CardContent>
                     </Card>
@@ -227,47 +514,288 @@ const Profile = () => {
                 )}
               </TabsContent>
 
-              {/* My Campaigns Tab */}
-              <TabsContent value="campaigns" className="mt-6 space-y-4">
-                {myCampaigns.length === 0 ? (
-                  <Card><CardContent className="p-6 text-center text-muted-foreground">No campaigns yet.</CardContent></Card>
-                ) : (
-                  myCampaigns.map((c) => (
-                    <Card key={c.id} className="border hover:border-primary/50 transition-smooth">
-                      <CardContent className="p-5">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="font-semibold mb-1">{c.title}</h3>
-                            <Badge className="bg-success">{c.status}</Badge>
-                          </div>
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/campaign/${c.id}`)}>Manage</Button>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="font-semibold">
-                            KSh {c.raised_amount?.toLocaleString()} / KSh {c.goal_amount?.toLocaleString()}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </TabsContent>
+              {/* Recurring Donations Tab */}
+              <TabsContent value="recurring" className="mt-6 space-y-6">
+                {/* Create New Recurring */}
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Create Recurring Donation</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="amount">Amount (KSh)</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          placeholder="500"
+                          value={recurringAmount}
+                          onChange={(e) => setRecurringAmount(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="frequency">Frequency</Label>
+                        <Select value={recurringFrequency} onValueChange={setRecurringFrequency}>
+                          <SelectTrigger id="frequency">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="yearly">Yearly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        id="reminder"
+                        checked={reminderEnabled}
+                        onCheckedChange={setReminderEnabled}
+                      />
+                      <Label htmlFor="reminder">Enable reminders</Label>
+                    </div>
 
-              {/* Receipts Tab */}
-              <TabsContent value="receipts" className="mt-6">
-                <Card className="border-2 border-dashed">
-                  <CardContent className="p-12 text-center">
-                    <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground mb-4">Tax receipts will be available here</p>
-                    <Button variant="outline">Download All Receipts</Button>
+                    <Button onClick={handleCreateRecurring} className="w-full">
+                      <Repeat className="w-4 h-4 mr-2" />
+                      Create Recurring Donation
+                    </Button>
+
+                    <p className="text-xs text-muted-foreground">
+                      Note: You'll need to complete payment method setup to activate recurring donations.
+                    </p>
                   </CardContent>
                 </Card>
+
+                {/* Active Subscriptions */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Active Subscriptions</h3>
+                  {subscriptionsLoading ? (
+                    <Skeleton className="h-24 w-full" />
+                  ) : subscriptions.filter((s: any) => s.active).length === 0 ? (
+                    <Card><CardContent className="p-6 text-center text-muted-foreground">
+                      No active recurring donations
+                    </CardContent></Card>
+                  ) : (
+                    subscriptions.filter((s: any) => s.active).map((sub: any) => (
+                      <Card key={sub.id} className="border">
+                        <CardContent className="p-5">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge className="capitalize">{sub.frequency}</Badge>
+                                <Badge variant="outline">{sub.payment_method || "Setup pending"}</Badge>
+                              </div>
+                              <p className="text-2xl font-bold text-primary mb-1">
+                                KSh {Number(sub.amount).toLocaleString()}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Started {new Date(sub.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <AlertDialog>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {}}
+                              >
+                                <X className="w-4 h-4 text-destructive" />
+                              </Button>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will stop future recurring donations. You can always create a new one later.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Keep Active</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleCancelSubscription(sub.id)}>
+                                    Cancel Subscription
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Payment Methods Tab */}
+              <TabsContent value="payments" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Payment Methods</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Add payment methods to enable quick donations and recurring payments
+                    </p>
+
+                    {/* TODO: Integrate with Stripe/PayPal */}
+                    <div className="space-y-3">
+                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                        <CreditCard className="w-4 h-4" />
+                        Add Credit/Debit Card (Stripe)
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l1.12-7.106c.082-.518.526-.9 1.05-.9h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.15.054-.295.077-.437a4.43 4.43 0 0 0-.859-.68z"/>
+                        </svg>
+                        Connect PayPal
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm7.5 12a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z"/>
+                        </svg>
+                        Google Pay
+                      </Button>
+                    </div>
+
+                    <Separator />
+
+                    <div className="bg-secondary/20 p-4 rounded-lg">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        Setup Instructions
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 ml-6 list-disc">
+                        <li>Configure STRIPE_SECRET_KEY in Supabase secrets</li>
+                        <li>Add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET</li>
+                        <li>For Google Pay: set GOOGLE_PAY_MERCHANT_ID</li>
+                        <li>Create webhook endpoints for payment confirmations</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Notifications Tab */}
+              <TabsContent value="notifications" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Notification Preferences</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Email Notifications</Label>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>In-App Notifications</Label>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Donation Reminders</Label>
+                      <Switch />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Recent Notifications</h3>
+                  {notificationsLoading ? (
+                    <Skeleton className="h-24 w-full" />
+                  ) : notifications.length === 0 ? (
+                    <Card><CardContent className="p-6 text-center text-muted-foreground">
+                      No notifications yet
+                    </CardContent></Card>
+                  ) : (
+                    notifications.map((notif: any) => (
+                      <Card key={notif.id} className={!notif.is_read ? "border-primary/50" : ""}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className={`mt-1 ${!notif.is_read ? 'text-primary' : 'text-muted-foreground'}`}>
+                              {notif.type === 'donation' ? <Heart className="w-4 h-4" /> : 
+                               notif.type === 'milestone' ? <TrendingUp className="w-4 h-4" /> :
+                               <Bell className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">{notif.title}</p>
+                              <p className="text-sm text-muted-foreground">{notif.message}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(notif.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           </div>
         </div>
       </div>
+
+      {/* Password Change Dialog */}
+      <AlertDialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change Password</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter your new password below
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setNewPassword("");
+              setConfirmPassword("");
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleChangePassword}>
+              Change Password
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to logout?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>
+              Logout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
