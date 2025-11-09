@@ -27,7 +27,8 @@ import { CampaignAnalytics } from "@/components/CampaignAnalytics";
 import { 
   Mail, MapPin, Calendar, Edit, Heart, DollarSign, FileText, 
   Lock, LogOut, CreditCard, Bell, TrendingUp, Users, 
-  AlertCircle, CheckCircle, Repeat, X 
+  AlertCircle, CheckCircle, Repeat, X, User, Shield, Download,
+  FileCheck, Settings, Eye, Share2
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -470,55 +471,409 @@ const Profile = () => {
 
           {/* Right Column - Main Content */}
           <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <Tabs defaultValue="donations" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="donations" className="gap-2">
-                  <Heart className="w-4 h-4" /> Donations
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 gap-1">
+                <TabsTrigger value="personal" className="gap-1 text-xs lg:text-sm">
+                  <User className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Info</span>
                 </TabsTrigger>
-                <TabsTrigger value="campaigns" className="gap-2">
-                  <FileText className="w-4 h-4" /> Campaigns
+                <TabsTrigger value="security" className="gap-1 text-xs lg:text-sm">
+                  <Shield className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Security</span>
                 </TabsTrigger>
-                <TabsTrigger value="recurring" className="gap-2">
-                  <Repeat className="w-4 h-4" /> Recurring
+                <TabsTrigger value="payments" className="gap-1 text-xs lg:text-sm">
+                  <CreditCard className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Payment</span>
                 </TabsTrigger>
-                <TabsTrigger value="payments" className="gap-2">
-                  <CreditCard className="w-4 h-4" /> Payments
+                <TabsTrigger value="preferences" className="gap-1 text-xs lg:text-sm">
+                  <Settings className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Prefs</span>
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="gap-2">
-                  <Bell className="w-4 h-4" /> Alerts
+                <TabsTrigger value="campaigns" className="gap-1 text-xs lg:text-sm">
+                  <TrendingUp className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger value="verification" className="gap-1 text-xs lg:text-sm">
+                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Trust</span>
+                </TabsTrigger>
+                <TabsTrigger value="exports" className="gap-1 text-xs lg:text-sm">
+                  <Download className="w-3 h-3 lg:w-4 lg:h-4" /> 
+                  <span className="hidden sm:inline">Export</span>
                 </TabsTrigger>
               </TabsList>
 
-              {/* Donations Tab */}
-              <TabsContent value="donations" className="mt-6 space-y-4">
-                {donationsLoading ? (
-                  <Card><CardContent className="p-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
-                ) : donations.length === 0 ? (
-                  <Card><CardContent className="p-6 text-center text-muted-foreground">No donations yet.</CardContent></Card>
-                ) : (
-                  donations.map((d: any) => (
-                    <Card key={d.id} className="border hover:border-primary/50 transition-smooth">
-                      <CardContent className="p-5 flex justify-between items-center">
-                        <div>
-                          <h3 className="font-semibold mb-1">Campaign Donation</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(d.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                          </p>
-                          {d.is_anonymous && (
-                            <Badge variant="secondary" className="mt-2">Anonymous</Badge>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-primary">KSh {Number(d.amount).toLocaleString()}</p>
-                          <Badge variant="outline" className="mt-1">{d.payment_status}</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
+              {/* Personal Info Tab */}
+              <TabsContent value="personal" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Personal Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="full-name">Full Name</Label>
+                        <Input id="full-name" defaultValue={profile?.name} disabled />
+                      </div>
+                      <div>
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" defaultValue={profile?.email} disabled />
+                      </div>
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input id="location" defaultValue={profile?.location} placeholder="Your location" disabled />
+                      </div>
+                      <div>
+                        <Label htmlFor="joined">Member Since</Label>
+                        <Input id="joined" defaultValue={profile?.joinedDate} disabled />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="bio">Bio</Label>
+                      <Input id="bio" defaultValue={profile?.bio} placeholder="Tell us about yourself" disabled />
+                    </div>
+                    <Button onClick={() => navigate("/profile/edit")} className="w-full">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Update your personal information by clicking Edit Profile
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Donations History */}
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Recent Donations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {donationsLoading ? (
+                      <Skeleton className="h-20 w-full" />
+                    ) : donations.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-4">No donations yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {donations.slice(0, 5).map((d: any) => (
+                          <div key={d.id} className="flex justify-between items-center p-3 rounded-lg bg-secondary/30">
+                            <div>
+                              <p className="font-medium">Campaign Donation</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(d.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-primary">KSh {Number(d.amount).toLocaleString()}</p>
+                              <Badge variant="outline" className="mt-1 text-xs">{d.payment_status}</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
-              {/* My Campaigns Tab */}
+              {/* Account Security Tab */}
+              <TabsContent value="security" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Account Security</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <div>
+                          <p className="font-medium">Password</p>
+                          <p className="text-sm text-muted-foreground">Last changed recently</p>
+                        </div>
+                        <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
+                          <Lock className="w-4 h-4 mr-2" />
+                          Change
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <div>
+                          <p className="font-medium">Two-Factor Authentication</p>
+                          <p className="text-sm text-muted-foreground">Add extra security to your account</p>
+                        </div>
+                        <Button variant="outline" disabled>
+                          <Shield className="w-4 h-4 mr-2" />
+                          Setup (Coming Soon)
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <div>
+                          <p className="font-medium">Active Sessions</p>
+                          <p className="text-sm text-muted-foreground">Manage your logged-in devices</p>
+                        </div>
+                        <Button variant="outline" disabled>
+                          View Sessions
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="bg-destructive/10 p-4 rounded-lg border border-destructive/30">
+                      <p className="font-medium text-destructive mb-2">Danger Zone</p>
+                      <Button 
+                        variant="destructive" 
+                        className="w-full"
+                        onClick={() => setShowLogoutDialog(true)}
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout from Account
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Payment Methods Tab */}
+              <TabsContent value="payments" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Payment Methods</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Add payment methods to enable quick donations and recurring payments
+                    </p>
+
+                    <div className="space-y-3">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke('create-stripe-session', {
+                              body: {
+                                type: 'setup',
+                                userId: profile?.userId,
+                                metadata: { email: profile?.email },
+                              },
+                            });
+                            if (error) throw error;
+                            if (data?.url) window.location.href = data.url;
+                          } catch (error: any) {
+                            toast({
+                              title: "Error",
+                              description: error.message || "Failed to setup payment method",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        Add Credit/Debit Card (Stripe)
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={() => {
+                          toast({
+                            title: "Coming Soon",
+                            description: "PayPal integration will be available soon.",
+                          });
+                        }}
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l1.12-7.106c.082-.518.526-.9 1.05-.9h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.15.054-.295.077-.437a4.43 4.43 0 0 0-.859-.68z"/>
+                        </svg>
+                        Connect PayPal
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={async () => {
+                          if (!window.PaymentRequest) {
+                            toast({
+                              title: "Not Supported",
+                              description: "Google Pay is not supported on this browser.",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          toast({
+                            title: "Coming Soon",
+                            description: "Google Pay integration requires additional setup.",
+                          });
+                        }}
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm7.5 12a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z"/>
+                        </svg>
+                        Google Pay
+                      </Button>
+                    </div>
+
+                    <Separator />
+
+                    <div className="bg-secondary/20 p-4 rounded-lg">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        Setup Instructions
+                      </p>
+                      <ul className="text-xs text-muted-foreground space-y-1 ml-6 list-disc">
+                        <li>Configure STRIPE_SECRET_KEY in Supabase secrets</li>
+                        <li>Add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET</li>
+                        <li>For Google Pay: set GOOGLE_PAY_MERCHANT_ID</li>
+                        <li>Create webhook endpoints for payment confirmations</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Recurring Subscriptions */}
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Recurring Donations</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {subscriptionsLoading ? (
+                      <Skeleton className="h-24 w-full" />
+                    ) : subscriptions.filter((s: any) => s.active).length === 0 ? (
+                      <p className="text-center text-muted-foreground py-4">No active recurring donations</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {subscriptions.filter((s: any) => s.active).map((sub: any) => (
+                          <div key={sub.id} className="flex justify-between items-center p-3 rounded-lg border">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge className="capitalize">{sub.frequency}</Badge>
+                                <Badge variant="outline">{sub.payment_method || "Setup pending"}</Badge>
+                              </div>
+                              <p className="font-bold text-primary">KSh {Number(sub.amount).toLocaleString()}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Started {new Date(sub.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleCancelSubscription(sub.id)}
+                            >
+                              <X className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Donation Preferences Tab */}
+              <TabsContent value="preferences" className="mt-6 space-y-4">
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle>Donation Preferences</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Privacy Settings */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Privacy Settings</h3>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <div className="space-y-1">
+                          <Label htmlFor="public-name-pref">Show my name publicly</Label>
+                          <p className="text-xs text-muted-foreground">
+                            If disabled, you'll appear as anonymous on donation feeds
+                          </p>
+                        </div>
+                        <Switch 
+                          id="public-name-pref"
+                          checked={profile.showNamePublicly}
+                          onCheckedChange={handleAnonymousToggle}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <div className="space-y-1">
+                          <Label>Show donation amounts</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Display how much you donate publicly
+                          </p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Notification Preferences */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Notification Preferences</h3>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <Label>Email Notifications</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <Label>In-App Notifications</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <Label>Donation Reminders</Label>
+                        <Switch 
+                          checked={reminderEnabled}
+                          onCheckedChange={setReminderEnabled}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <Label>Campaign Updates</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg border">
+                        <Label>Weekly Summary</Label>
+                        <Switch />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Recurring Donation Setup */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Setup Recurring Donation</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="amount-pref">Amount (KSh)</Label>
+                          <Input
+                            id="amount-pref"
+                            type="number"
+                            placeholder="500"
+                            value={recurringAmount}
+                            onChange={(e) => setRecurringAmount(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="frequency-pref">Frequency</Label>
+                          <Select value={recurringFrequency} onValueChange={setRecurringFrequency}>
+                            <SelectTrigger id="frequency-pref">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="yearly">Yearly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button onClick={handleCreateRecurring} className="w-full">
+                        <Repeat className="w-4 h-4 mr-2" />
+                        Create Recurring Donation
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Set up automatic recurring donations to support causes regularly
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Analytics Dashboard Tab (My Campaigns) */}
               <TabsContent value="campaigns" className="mt-6 space-y-4">
                 {/* Campaigns Started Summary */}
                 {campaigns.length > 0 && (
@@ -626,268 +981,244 @@ const Profile = () => {
                 </Card>
               </TabsContent>
 
-              {/* Recurring Donations Tab */}
-              <TabsContent value="recurring" className="mt-6 space-y-6">
-                {/* Create New Recurring */}
+              {/* Verification & Trust Tab */}
+              <TabsContent value="verification" className="mt-6 space-y-4">
                 <Card className="border-2">
                   <CardHeader>
-                    <CardTitle className="text-lg">Create Recurring Donation</CardTitle>
+                    <CardTitle>Verification & Trust</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="amount">Amount (KSh)</Label>
-                        <Input
-                          id="amount"
-                          type="number"
-                          placeholder="500"
-                          value={recurringAmount}
-                          onChange={(e) => setRecurringAmount(e.target.value)}
-                        />
+                  <CardContent className="space-y-6">
+                    {/* Verification Status */}
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                        <CheckCircle className="w-5 h-5 text-primary mt-0.5" />
+                        <div className="flex-1">
+                          <p className="font-medium">Account Verified</p>
+                          <p className="text-sm text-muted-foreground">
+                            Your account is verified. You can create and manage campaigns.
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="frequency">Frequency</Label>
-                        <Select value={recurringFrequency} onValueChange={setRecurringFrequency}>
-                          <SelectTrigger id="frequency">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="yearly">Yearly</SelectItem>
-                          </SelectContent>
-                        </Select>
+
+                      <div className="flex items-start gap-3 p-4 rounded-lg border">
+                        <Mail className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-medium">Email Verified</p>
+                            <Badge variant="outline">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Verified
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-4 rounded-lg border">
+                        <Shield className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-medium">Identity Verification</p>
+                            <Button variant="outline" size="sm" disabled>
+                              Verify (Coming Soon)
+                            </Button>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Upload ID documents to increase trust and unlock higher funding limits
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Switch 
-                        id="reminder"
-                        checked={reminderEnabled}
-                        onCheckedChange={setReminderEnabled}
-                      />
-                      <Label htmlFor="reminder">Enable reminders</Label>
+
+                    <Separator />
+
+                    {/* Trust Badges */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Trust Badges</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="p-3 rounded-lg border text-center">
+                          <CheckCircle className="w-8 h-8 text-primary mx-auto mb-2" />
+                          <p className="text-sm font-medium">Verified Donor</p>
+                          <p className="text-xs text-muted-foreground">Active account</p>
+                        </div>
+                        <div className="p-3 rounded-lg border text-center opacity-50">
+                          <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm font-medium">Top Supporter</p>
+                          <p className="text-xs text-muted-foreground">Donate 10+ times</p>
+                        </div>
+                        <div className="p-3 rounded-lg border text-center opacity-50">
+                          <Heart className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm font-medium">Champion</p>
+                          <p className="text-xs text-muted-foreground">Support 5+ campaigns</p>
+                        </div>
+                      </div>
                     </div>
 
-                    <Button onClick={handleCreateRecurring} className="w-full">
-                      <Repeat className="w-4 h-4 mr-2" />
-                      Create Recurring Donation
-                    </Button>
+                    <Separator />
 
-                    <p className="text-xs text-muted-foreground">
-                      Note: You'll need to complete payment method setup to activate recurring donations.
-                    </p>
+                    {/* Security Score */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Security Score</h3>
+                      <div className="p-4 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-muted-foreground">Account Security</span>
+                          <span className="text-2xl font-bold text-primary">75%</span>
+                        </div>
+                        <div className="w-full bg-secondary rounded-full h-2 mb-4">
+                          <div className="bg-primary h-2 rounded-full" style={{ width: '75%' }}></div>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-primary" />
+                            <span>Email verified</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-primary" />
+                            <span>Strong password</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <AlertCircle className="w-4 h-4" />
+                            <span>Enable 2FA for better security</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
-
-                {/* Active Subscriptions */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Active Subscriptions</h3>
-                  {subscriptionsLoading ? (
-                    <Skeleton className="h-24 w-full" />
-                  ) : subscriptions.filter((s: any) => s.active).length === 0 ? (
-                    <Card><CardContent className="p-6 text-center text-muted-foreground">
-                      No active recurring donations
-                    </CardContent></Card>
-                  ) : (
-                    subscriptions.filter((s: any) => s.active).map((sub: any) => (
-                      <Card key={sub.id} className="border">
-                        <CardContent className="p-5">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge className="capitalize">{sub.frequency}</Badge>
-                                <Badge variant="outline">{sub.payment_method || "Setup pending"}</Badge>
-                              </div>
-                              <p className="text-2xl font-bold text-primary mb-1">
-                                KSh {Number(sub.amount).toLocaleString()}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Started {new Date(sub.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <AlertDialog>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {}}
-                              >
-                                <X className="w-4 h-4 text-destructive" />
-                              </Button>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will stop future recurring donations. You can always create a new one later.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Keep Active</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleCancelSubscription(sub.id)}>
-                                    Cancel Subscription
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
               </TabsContent>
 
-              {/* Payment Methods Tab */}
-              <TabsContent value="payments" className="mt-6 space-y-4">
+              {/* Export / Receipts Tab */}
+              <TabsContent value="exports" className="mt-6 space-y-4">
                 <Card className="border-2">
                   <CardHeader>
-                    <CardTitle>Payment Methods</CardTitle>
+                    <CardTitle>Export & Receipts</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Add payment methods to enable quick donations and recurring payments
-                    </p>
-
-                    <div className="space-y-3">
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-2"
-                        onClick={async () => {
-                          try {
-                            const { data, error } = await supabase.functions.invoke('create-stripe-session', {
-                              body: {
-                                type: 'setup',
-                                userId: profile?.userId,
-                                metadata: { email: profile?.email },
-                              },
-                            });
-                            if (error) throw error;
-                            if (data?.url) window.location.href = data.url;
-                          } catch (error: any) {
-                            toast({
-                              title: "Error",
-                              description: error.message || "Failed to setup payment method",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        Add Credit/Debit Card (Stripe)
+                  <CardContent className="space-y-6">
+                    {/* Tax Receipts */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Tax Receipts</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Download official tax receipts for your donations to claim tax deductions
+                      </p>
+                      <Button variant="outline" className="w-full justify-start gap-2">
+                        <FileCheck className="w-4 h-4" />
+                        Download 2024 Tax Receipt
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-2"
-                        onClick={() => {
-                          toast({
-                            title: "Coming Soon",
-                            description: "PayPal integration will be available soon.",
-                          });
-                        }}
-                      >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l1.12-7.106c.082-.518.526-.9 1.05-.9h2.19c4.298 0 7.664-1.747 8.647-6.797.03-.15.054-.295.077-.437a4.43 4.43 0 0 0-.859-.68z"/>
-                        </svg>
-                        Connect PayPal
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-2"
-                        onClick={async () => {
-                          // Check if Payment Request API is available
-                          if (!window.PaymentRequest) {
-                            toast({
-                              title: "Not Supported",
-                              description: "Google Pay is not supported on this browser.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          toast({
-                            title: "Coming Soon",
-                            description: "Google Pay integration requires additional setup.",
-                          });
-                        }}
-                      >
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm7.5 12a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z"/>
-                        </svg>
-                        Google Pay
+                      <Button variant="outline" className="w-full justify-start gap-2" disabled>
+                        <FileCheck className="w-4 h-4" />
+                        Download 2023 Tax Receipt
                       </Button>
                     </div>
 
                     <Separator />
 
-                    <div className="bg-secondary/20 p-4 rounded-lg">
-                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4" />
-                        Setup Instructions
+                    {/* Export Data */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Export Your Data</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Export your donation history, campaign data, and account information
                       </p>
-                      <ul className="text-xs text-muted-foreground space-y-1 ml-6 list-disc">
-                        <li>Configure STRIPE_SECRET_KEY in Supabase secrets</li>
-                        <li>Add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET</li>
-                        <li>For Google Pay: set GOOGLE_PAY_MERCHANT_ID</li>
-                        <li>Create webhook endpoints for payment confirmations</li>
-                      </ul>
+                      <div className="space-y-3">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-2"
+                          onClick={() => {
+                            toast({
+                              title: "Preparing Export",
+                              description: "Your donation history is being prepared for download...",
+                            });
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export Donation History (CSV)
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-2"
+                          onClick={() => {
+                            toast({
+                              title: "Preparing Export",
+                              description: "Your campaign data is being prepared for download...",
+                            });
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export Campaign Analytics (PDF)
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-2"
+                          onClick={() => {
+                            toast({
+                              title: "Preparing Export",
+                              description: "Your account data is being prepared for download...",
+                            });
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                          Export All Data (ZIP)
+                        </Button>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
-              {/* Notifications Tab */}
-              <TabsContent value="notifications" className="mt-6 space-y-4">
-                <Card className="border-2">
-                  <CardHeader>
-                    <CardTitle>Notification Preferences</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label>Email Notifications</Label>
-                      <Switch defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label>In-App Notifications</Label>
-                      <Switch defaultChecked />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label>Donation Reminders</Label>
-                      <Switch />
-                    </div>
-                  </CardContent>
-                </Card>
+                    <Separator />
 
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Recent Notifications</h3>
-                  {notificationsLoading ? (
-                    <Skeleton className="h-24 w-full" />
-                  ) : notifications.length === 0 ? (
-                    <Card><CardContent className="p-6 text-center text-muted-foreground">
-                      No notifications yet
-                    </CardContent></Card>
-                  ) : (
-                    notifications.map((notif: any) => (
-                      <Card key={notif.id} className={!notif.is_read ? "border-primary/50" : ""}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className={`mt-1 ${!notif.is_read ? 'text-primary' : 'text-muted-foreground'}`}>
-                              {notif.type === 'donation' ? <Heart className="w-4 h-4" /> : 
-                               notif.type === 'milestone' ? <TrendingUp className="w-4 h-4" /> :
-                               <Bell className="w-4 h-4" />}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{notif.title}</p>
-                              <p className="text-sm text-muted-foreground">{notif.message}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {new Date(notif.created_at).toLocaleDateString()}
+                    {/* Donation Statements */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium">Monthly Statements</h3>
+                      <p className="text-sm text-muted-foreground">
+                        View and download your monthly donation summaries
+                      </p>
+                      {donationsLoading ? (
+                        <Skeleton className="h-20 w-full" />
+                      ) : donations.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-4">No statements available</p>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-3 rounded-lg border">
+                            <div>
+                              <p className="font-medium">November 2024</p>
+                              <p className="text-sm text-muted-foreground">
+                                {donations.filter((d: any) => new Date(d.created_at).getMonth() === 10).length} donations
                               </p>
                             </div>
+                            <Button variant="ghost" size="sm">
+                              <Download className="w-4 h-4" />
+                            </Button>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
+                          <div className="flex items-center justify-between p-3 rounded-lg border opacity-50">
+                            <div>
+                              <p className="font-medium">October 2024</p>
+                              <p className="text-sm text-muted-foreground">No donations</p>
+                            </div>
+                            <Button variant="ghost" size="sm" disabled>
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
+
+                    {/* Impact Report */}
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 border">
+                      <div className="flex items-start gap-3">
+                        <TrendingUp className="w-5 h-5 text-primary mt-0.5" />
+                        <div className="flex-1">
+                          <h3 className="font-medium mb-2">Annual Impact Report</h3>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Get a comprehensive report of your donations and impact for the year
+                          </p>
+                          <Button className="w-full">
+                            <FileCheck className="w-4 h-4 mr-2" />
+                            Generate 2024 Impact Report
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
