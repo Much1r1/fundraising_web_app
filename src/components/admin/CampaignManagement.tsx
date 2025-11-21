@@ -134,7 +134,7 @@ export const CampaignManagement = () => {
             .from("users")
             .select("full_name, email")
             .eq("id", campaign.user_id)
-            .single();
+            .maybeSingle();
 
           return {
             ...campaign,
