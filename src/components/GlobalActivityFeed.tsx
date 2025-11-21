@@ -47,7 +47,7 @@ const GlobalActivityFeed = () => {
               .from("users")
               .select("full_name, avatar_url")
               .eq("id", donation.donor_id)
-              .single();
+              .maybeSingle();
             
             if (userData) {
               donor_name = userData.full_name;
@@ -60,7 +60,7 @@ const GlobalActivityFeed = () => {
             .from("campaigns")
             .select("title")
             .eq("id", donation.campaign_id)
-            .single();
+            .maybeSingle();
 
           if (campaignData) {
             campaign_title = campaignData.title;
@@ -110,7 +110,7 @@ const GlobalActivityFeed = () => {
               .from("users")
               .select("full_name, avatar_url")
               .eq("id", newDonation.donor_id)
-              .single();
+              .maybeSingle();
             
             if (userData) {
               donor_name = userData.full_name;
@@ -123,7 +123,7 @@ const GlobalActivityFeed = () => {
             .from("campaigns")
             .select("title")
             .eq("id", newDonation.campaign_id)
-            .single();
+            .maybeSingle();
 
           if (campaignData) {
             campaign_title = campaignData.title;
