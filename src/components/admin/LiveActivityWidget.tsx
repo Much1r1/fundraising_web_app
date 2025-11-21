@@ -46,24 +46,28 @@ export const LiveActivityWidget = () => {
         const recentActivities: ActivityItem[] = [];
 
         donations?.forEach((donation: any) => {
-          recentActivities.push({
-            id: donation.id,
-            type: "donation",
-            title: `New donation received`,
-            subtitle: donation.campaigns?.title || "Unknown campaign",
-            amount: Number(donation.amount),
-            timestamp: parseUTCDate(donation.created_at),
-          });
+          if (donation.created_at) {
+            recentActivities.push({
+              id: donation.id,
+              type: "donation",
+              title: `New donation received`,
+              subtitle: donation.campaigns?.title || "Unknown campaign",
+              amount: Number(donation.amount),
+              timestamp: parseUTCDate(donation.created_at),
+            });
+          }
         });
 
         campaigns?.forEach((campaign: any) => {
-          recentActivities.push({
-            id: campaign.id,
-            type: "campaign_update",
-            title: `Campaign ${campaign.approval_status}`,
-            subtitle: campaign.title,
-            timestamp: parseUTCDate(campaign.updated_at),
-          });
+          if (campaign.updated_at) {
+            recentActivities.push({
+              id: campaign.id,
+              type: "campaign_update",
+              title: `Campaign ${campaign.approval_status}`,
+              subtitle: campaign.title,
+              timestamp: parseUTCDate(campaign.updated_at),
+            });
+          }
         });
 
         // Sort by timestamp
@@ -88,6 +92,8 @@ export const LiveActivityWidget = () => {
         },
         async (payload) => {
           console.log("New donation received:", payload);
+          
+          if (!payload.new.created_at) return;
           
           // Fetch campaign details
           const { data: campaign } = await supabase
@@ -125,6 +131,8 @@ export const LiveActivityWidget = () => {
         },
         (payload) => {
           console.log("Campaign updated:", payload);
+          
+          if (!payload.new.updated_at) return;
           
           const newActivity: ActivityItem = {
             id: payload.new.id,
